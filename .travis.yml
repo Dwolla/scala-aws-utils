@@ -1,0 +1,17 @@
+language: scala
+
+scala:
+  - 2.10.6
+  - 2.11.8
+
+script: sbt ++$TRAVIS_SCALA_VERSION pipeline
+
+before_deploy:
+  - mkdir -p $HOME/.bintray
+  - openssl aes-256-cbc -K $encrypted_2a3b4d326ff7_key -iv $encrypted_2a3b4d326ff7_iv -in .credentials.enc -out $HOME/.bintray/.credentials -d
+
+deploy:
+  provider: script
+  script: sbt ++$TRAVIS_SCALA_VERSION publish
+  on:
+    branch: master
