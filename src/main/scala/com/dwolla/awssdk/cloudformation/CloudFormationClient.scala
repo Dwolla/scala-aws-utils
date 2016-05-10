@@ -1,33 +1,22 @@
-package com.dwolla.awssdk
+package com.dwolla.awssdk.cloudformation
 
 import com.amazonaws.AmazonWebServiceRequest
 import com.amazonaws.regions.Regions
 import com.amazonaws.regions.Regions.US_WEST_2
-import com.amazonaws.services.cloudformation.AmazonCloudFormationAsyncClient
+import com.amazonaws.services.cloudformation.{AmazonCloudFormationAsync, AmazonCloudFormationAsyncClient}
 import com.amazonaws.services.cloudformation.model.Capability.CAPABILITY_IAM
 import com.amazonaws.services.cloudformation.model.StackStatus._
 import com.amazonaws.services.cloudformation.model.{Parameter ⇒ AwsParameter, _}
+import com.dwolla.awssdk.cloudformation.CloudFormationClient.StackID
 import com.dwolla.awssdk.utils.ScalaAsyncHandler
 
 import scala.collection.JavaConversions._
 import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.language.implicitConversions
 
-package object cloudformation {
-
-  import concurrent.ExecutionContext.Implicits.global
-
-  type StackID = String
-
-  def clientForRegion(r: Regions) = {
-    val x = new AmazonCloudFormationAsyncClient()
-    x.configureRegion(r)
-    x
-  }
-
-  def createOrUpdateTemplate(stackName: String, template: String, params: List[(String, String)] = List.empty[(String, String)]) = {
-    val client = clientForRegion(US_WEST_2)
+class CloudFormationClient(client: AmazonCloudFormationAsync)(implicit ec: ExecutionContext) {
+  def createOrUpdateTemplate(stackName: String, template: String, params: List[(String, String)] = List.empty[(String, String)]): StackID = {
 
     def getStackByName(name: String) = withHandler[DescribeStacksRequest, DescribeStacksResult, Option[Stack]] { handler ⇒
       client.describeStacksAsync(handler)
@@ -35,20 +24,18 @@ package object cloudformation {
     }
 
     def createStack(potentialStack: PotentialStack) = withHandler[CreateStackRequest, CreateStackResult, StackID] { handler ⇒
-      client.createStackAsync(potentialStack, handler)
+      client.createStackAsync(potentialStack.toCreateRequest, handler)
       handler.future.map(_.getStackId)
     }
 
     def updateStack(potentialStack: PotentialStack) = withHandler[UpdateStackRequest, UpdateStackResult, StackID] { handler ⇒
-      client.updateStackAsync(potentialStack, handler)
+      client.updateStackAsync(potentialStack.toUpdateRequest, handler)
       handler.future.map(_.getStackId)
     }
 
     implicit def tuplesToParams(tuples: List[(String, String)]): List[AwsParameter] = tuples.map {
       case (key, value) ⇒ new AwsParameter().withParameterKey(key).withParameterValue(value)
     }
-    implicit def potentialStackToCreate(potentialStack: PotentialStack): CreateStackRequest = potentialStack.toCreateRequest
-    implicit def potentialStackToUpdate(potentialStack: PotentialStack): UpdateStackRequest = potentialStack.toUpdateRequest
     implicit def stackStatus(status: String): StackStatus = StackStatus.valueOf(status)
 
     def withHandler[A <: AmazonWebServiceRequest, B, R](f: ScalaAsyncHandler[A, B] ⇒ Future[R]) = f(new ScalaAsyncHandler[A, B])
@@ -88,4 +75,19 @@ package object cloudformation {
     UPDATE_COMPLETE,
     UPDATE_ROLLBACK_COMPLETE
   )
+
+}
+
+object CloudFormationClient {
+  import concurrent.ExecutionContext.Implicits.global
+  type StackID = String
+
+  private def clientForRegion(r: Regions) = {
+    val x = new AmazonCloudFormationAsyncClient()
+    x.configureRegion(r)
+    x
+  }
+
+  def apply(): CloudFormationClient = apply(US_WEST_2)
+  def apply(r: Regions): CloudFormationClient = new CloudFormationClient(clientForRegion(r))
 }
