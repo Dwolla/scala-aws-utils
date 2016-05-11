@@ -3,11 +3,11 @@ package com.dwolla.awssdk.cloudformation
 import com.amazonaws.AmazonWebServiceRequest
 import com.amazonaws.regions.Regions
 import com.amazonaws.regions.Regions.US_WEST_2
-import com.amazonaws.services.cloudformation.{AmazonCloudFormationAsync, AmazonCloudFormationAsyncClient}
 import com.amazonaws.services.cloudformation.model.Capability.CAPABILITY_IAM
 import com.amazonaws.services.cloudformation.model.StackStatus._
 import com.amazonaws.services.cloudformation.model.{Parameter ⇒ AwsParameter, _}
-import com.dwolla.awssdk.cloudformation.CloudFormationClient.StackID
+import com.amazonaws.services.cloudformation.{AmazonCloudFormationAsync, AmazonCloudFormationAsyncClient}
+import com.dwolla.awssdk.cloudformation.CloudFormationClient.{StackID, updatableStackStatuses}
 import com.dwolla.awssdk.utils.ScalaAsyncHandler
 
 import scala.collection.JavaConversions._
@@ -15,7 +15,11 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.language.implicitConversions
 
-class CloudFormationClient(client: AmazonCloudFormationAsync)(implicit ec: ExecutionContext) {
+trait CloudFormationClient {
+  def createOrUpdateTemplate(stackName: String, template: String, params: List[(String, String)] = List.empty[(String, String)]): StackID
+}
+
+class CloudFormationClientImpl(client: AmazonCloudFormationAsync)(implicit ec: ExecutionContext) extends CloudFormationClient {
   def createOrUpdateTemplate(stackName: String, template: String, params: List[(String, String)] = List.empty[(String, String)]): StackID = {
 
     def getStackByName(name: String) = withHandler[DescribeStacksRequest, DescribeStacksResult, Option[Stack]] { handler ⇒
@@ -69,6 +73,18 @@ class CloudFormationClient(client: AmazonCloudFormationAsync)(implicit ec: Execu
       .withCapabilities(CAPABILITY_IAM)
   }
 
+}
+
+object CloudFormationClient {
+  import concurrent.ExecutionContext.Implicits.global
+  type StackID = String
+
+  def apply(): CloudFormationClient = apply(US_WEST_2)
+
+  def apply(r: String): CloudFormationClient = apply(Regions.fromName(r))
+
+  def apply(r: Regions): CloudFormationClient = new CloudFormationClientImpl(clientForRegion(r))
+
   val updatableStackStatuses = Seq(
     CREATE_COMPLETE,
     ROLLBACK_COMPLETE,
@@ -76,18 +92,9 @@ class CloudFormationClient(client: AmazonCloudFormationAsync)(implicit ec: Execu
     UPDATE_ROLLBACK_COMPLETE
   )
 
-}
-
-object CloudFormationClient {
-  import concurrent.ExecutionContext.Implicits.global
-  type StackID = String
-
   private def clientForRegion(r: Regions) = {
     val x = new AmazonCloudFormationAsyncClient()
     x.configureRegion(r)
     x
   }
-
-  def apply(): CloudFormationClient = apply(US_WEST_2)
-  def apply(r: Regions): CloudFormationClient = new CloudFormationClient(clientForRegion(r))
 }
