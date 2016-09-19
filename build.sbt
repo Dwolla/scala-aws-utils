@@ -1,7 +1,7 @@
 import java.lang.System._
 
 lazy val buildVersion = {
-  val mainVersion = "0.2"
+  val mainVersion = "0.3"
   val minorVersion = Option(getenv("TRAVIS_BUILD_NUMBER"))
   minorVersion match {
     case Some(v: String) ⇒ s"$mainVersion.$v"
@@ -20,8 +20,8 @@ lazy val buildSettings = Seq(
   crossScalaVersions := Seq("2.10.6", "2.11.8"),
   startYear := Option(2016),
   libraryDependencies ++= {
-    val awsSdkVersion = "1.10.71"
-    val specs2Version = "3.7.2"
+    val awsSdkVersion = "1.11.35"
+    val specs2Version = "3.8.5"
     Seq(
       "com.amazonaws"   %  "aws-java-sdk-cloudformation"  % awsSdkVersion,
       "ch.qos.logback"  %  "logback-classic"              % "1.1.7",
