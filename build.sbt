@@ -1,7 +1,7 @@
 import java.lang.System._
 
 lazy val buildVersion = {
-  val mainVersion = "0.3"
+  val mainVersion = "0.4"
   val minorVersion = Option(getenv("TRAVIS_BUILD_NUMBER"))
   minorVersion match {
     case Some(v: String) ⇒ s"$mainVersion.$v"
