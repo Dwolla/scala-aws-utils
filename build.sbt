@@ -1,27 +1,16 @@
-import java.lang.System._
-
-lazy val buildVersion = {
-  val mainVersion = "0.4"
-  val minorVersion = Option(getenv("TRAVIS_BUILD_NUMBER"))
-  minorVersion match {
-    case Some(v: String) ⇒ s"$mainVersion.$v"
-    case None ⇒ mainVersion + "-SNAPSHOT"
-  }
-}
-
 lazy val buildSettings = Seq(
   organization := "com.dwolla",
   name := "scala-aws-utils",
   homepage := Some(url("https://github.com/Dwolla/scala-aws-utils")),
   description := "Utilities for interacting with the AWS SDKs from Scala",
   licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
-  version := buildVersion,
+  version := "1.0.0",
   scalaVersion := "2.11.8",
-  crossScalaVersions := Seq("2.10.6", "2.11.8"),
+  crossScalaVersions := Seq("2.10.6", "2.11.8", "2.12.1"),
   startYear := Option(2016),
   libraryDependencies ++= {
-    val awsSdkVersion = "1.11.35"
-    val specs2Version = "3.8.5"
+    val awsSdkVersion = "1.11.66"
+    val specs2Version = "3.8.6"
     Seq(
       "com.amazonaws"   %  "aws-java-sdk-cloudformation"  % awsSdkVersion,
       "ch.qos.logback"  %  "logback-classic"              % "1.1.7",
