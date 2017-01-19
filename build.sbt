@@ -4,12 +4,12 @@ lazy val buildSettings = Seq(
   homepage := Some(url("https://github.com/Dwolla/scala-aws-utils")),
   description := "Utilities for interacting with the AWS SDKs from Scala",
   licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
-  version := "1.0.0",
-  scalaVersion := "2.11.8",
+  version := "1.1.0",
+  scalaVersion := "2.12.1",
   crossScalaVersions := Seq("2.10.6", "2.11.8", "2.12.1"),
   startYear := Option(2016),
   libraryDependencies ++= {
-    val awsSdkVersion = "1.11.66"
+    val awsSdkVersion = "1.11.75"
     val specs2Version = "3.8.6"
     Seq(
       "com.amazonaws"   %  "aws-java-sdk-cloudformation"  % awsSdkVersion,
@@ -17,7 +17,8 @@ lazy val buildSettings = Seq(
       "org.specs2"      %% "specs2-core"                  % specs2Version  % Test,
       "org.specs2"      %% "specs2-mock"                  % specs2Version  % Test
     )
-  }
+  },
+  scalacOptions += "-deprecation"
 )
 
 lazy val bintraySettings = Seq(
