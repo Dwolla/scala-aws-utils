@@ -9,7 +9,7 @@ import scala.concurrent.{Future, Promise}
 
 class ScalaAsyncHandler[A <: AmazonWebServiceRequest, B] extends AsyncHandler[A, B] {
   private val promise = Promise[B]
-  val future = promise.future
+  val future: Future[B] = promise.future
 
   override def onError(exception: Exception): Unit = promise.failure(exception)
   override def onSuccess(request: A, result: B): Unit = promise.success(result)
@@ -17,21 +17,20 @@ class ScalaAsyncHandler[A <: AmazonWebServiceRequest, B] extends AsyncHandler[A,
 
 object ScalaAsyncHandler {
   object Implicits {
-    implicit class RequestHolder[A <: AmazonWebServiceRequest](req: A) {
+    implicit class RequestHolder[S <: AmazonWebServiceRequest](req: S) {
       /*
-        This would be perfect if B could be provided as a mapping from A → the appropriate Result type. Then the type argument B could be removed from the signature and replaced
+        This would be perfect if B could be provided as a mapping from S → the appropriate Result type. Then the type argument T could be removed from the signature and replaced
         throughout with the mapped value.
        */
-
-      class BoundRequestHolder[B] {
-        def via(body: (A, AsyncHandler[A, B]) ⇒ JFuture[B]): Future[B] = {
-          val handler = new ScalaAsyncHandler[A, B]
+      class BoundRequestHolder[T] {
+        def via(body: (S, AsyncHandler[S, T]) ⇒ JFuture[T]): Future[T] = {
+          val handler = new ScalaAsyncHandler[S, T]
           body(req, handler)
           handler.future
         }
       }
 
-      def to[B]: BoundRequestHolder[B] = new BoundRequestHolder[B]
+      def to[T]: BoundRequestHolder[T] = new BoundRequestHolder[T]
     }
   }
 }
