@@ -4,7 +4,7 @@ lazy val buildSettings = Seq(
   homepage := Some(url("https://github.com/Dwolla/scala-aws-utils")),
   description := "Utilities for interacting with the AWS SDKs from Scala",
   licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
-  version := "1.1.0",
+  version := "1.2.0",
   scalaVersion := "2.12.1",
   crossScalaVersions := Seq("2.10.6", "2.11.8", "2.12.1"),
   startYear := Option(2016),
@@ -12,7 +12,9 @@ lazy val buildSettings = Seq(
     val awsSdkVersion = "1.11.75"
     val specs2Version = "3.8.6"
     Seq(
-      "com.amazonaws"   %  "aws-java-sdk-cloudformation"  % awsSdkVersion,
+      "com.amazonaws"   %  "aws-java-sdk-core"            % awsSdkVersion,
+      "com.amazonaws"   %  "aws-java-sdk-cloudformation"  % awsSdkVersion % Provided,
+      "com.amazonaws"   %  "aws-java-sdk-kms"             % awsSdkVersion % Provided,
       "ch.qos.logback"  %  "logback-classic"              % "1.1.7",
       "org.specs2"      %% "specs2-core"                  % specs2Version  % Test,
       "org.specs2"      %% "specs2-mock"                  % specs2Version  % Test

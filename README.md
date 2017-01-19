@@ -5,3 +5,5 @@
 [![license](https://img.shields.io/github/license/Dwolla/scala-aws-utils.svg?style=flat-square)]()
 
 Utilities package for working with the Java AWS SDKs from Scala and SBT.
+
+Projects including this library will also need to explicitly include the AWS SDK libraries they will rely on, to avoid inadvertently importing more libraries than are required.
