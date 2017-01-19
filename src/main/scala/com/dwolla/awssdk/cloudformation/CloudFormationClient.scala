@@ -19,12 +19,12 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.language.{implicitConversions, reflectiveCalls}
 
 trait CloudFormationClient {
-  def createOrUpdateTemplate(stackName: String, template: String, params: List[(String, String)] = List.empty[(String, String)]): Future[StackID]
+  def createOrUpdateTemplate(stackName: String, template: String, params: List[(String, String)] = List.empty[(String, String)], roleArn: Option[String] = None): Future[StackID]
 }
 
 class CloudFormationClientImpl(client: AmazonCloudFormationAsync)(implicit ec: ExecutionContext) extends CloudFormationClient with AutoCloseable with Closeable {
 
-  override def createOrUpdateTemplate(stackName: String, template: String, params: List[(String, String)] = List.empty[(String, String)]): Future[StackID] = {
+  override def createOrUpdateTemplate(stackName: String, template: String, params: List[(String, String)] = List.empty[(String, String)], roleArn: Option[String] = None): Future[StackID] = {
     def getStackByName(name: String) = withHandler[DescribeStacksRequest, DescribeStacksResult](client.describeStacksAsync)
       .map(_.getStacks.filter(s ⇒ s.getStackName == name && StackStatus.valueOf(s.getStackStatus) != DELETE_COMPLETE).toList.headOption)
 
@@ -41,7 +41,7 @@ class CloudFormationClientImpl(client: AmazonCloudFormationAsync)(implicit ec: E
       handler.future
     }
 
-    val requestBuilder = StackDetails(stackName, template, params)
+    val requestBuilder = StackDetails(stackName, template, params, roleArn)
 
     getStackByName(stackName).flatMap(
       _.fold(createStack(requestBuilder)) {
@@ -78,7 +78,7 @@ object CloudFormationClient {
   }
 }
 
-case class StackDetails(name: String, template: String, parameters: List[AwsParameter])
+case class StackDetails(name: String, template: String, parameters: List[AwsParameter], roleArn: Option[String] = None)
 
 trait Builder[T] {
   def withStackName(name: String): T
@@ -93,12 +93,14 @@ object Implicits {
     override def withTemplateBody(name: String): CreateStackRequest = s.withTemplateBody(name)
     override def withParameters(params: List[AwsParameter]): CreateStackRequest = s.withParameters(params)
     override def withCapabilities(capabilities: Capability*): CreateStackRequest = s.withCapabilities(capabilities: _*)
+    override def withRoleArn(roleArn: String): CreateStackRequest = s.withRoleARN(roleArn)
   }
   implicit class UpdateStackRequestToBuilder(s: UpdateStackRequest) extends Builder[UpdateStackRequest] {
     override def withStackName(name: String) = s.withStackName(name)
     override def withTemplateBody(name: String) = s.withTemplateBody(name)
     override def withParameters(params: List[AwsParameter]) = s.withParameters(params)
     override def withCapabilities(capabilities: Capability*): UpdateStackRequest = s.withCapabilities(capabilities: _*)
+    override def withRoleArn(roleArn: String): UpdateStackRequest = s.withRoleARN(roleArn)
   }
 
   implicit def potentialStackToCreateRequest(ps: StackDetails): CreateStackRequest = populate(ps, new CreateStackRequest)
@@ -110,9 +112,11 @@ object Implicits {
   implicit def stackStatus(status: String): StackStatus = StackStatus.valueOf(status)
 
   private def populate[T](ps:StackDetails, builder: Builder[T])(implicit ev: T ⇒ Builder[T]): T = {
-    builder.withStackName(ps.name)
+    val t = builder.withStackName(ps.name)
       .withTemplateBody(ps.template)
       .withParameters(ps.parameters)
       .withCapabilities(CAPABILITY_IAM)
+
+    ps.roleArn.fold(t)(t.withRoleArn)
   }
 }

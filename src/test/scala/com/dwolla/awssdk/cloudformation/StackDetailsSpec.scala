@@ -11,7 +11,6 @@ class StackDetailsSpec extends Specification {
 
   "StackDetails" should {
     "be convertible to CreateStackRequest" in {
-
       val output: CreateStackRequest = StackDetails("name", "template", List(new Parameter().withParameterKey("key").withParameterValue("value")))
 
       output must beAnInstanceOf[CreateStackRequest]
@@ -19,6 +18,7 @@ class StackDetailsSpec extends Specification {
       output.getTemplateBody must_== "template"
       output.getParameters must_== List(new Parameter().withParameterKey("key").withParameterValue("value")).asJava
       output.getCapabilities must_== List(CAPABILITY_IAM.toString).asJava
+      output.getRoleARN must beNull
     }
 
     "be convertible to UpdateStackRequest" in {
@@ -29,6 +29,19 @@ class StackDetailsSpec extends Specification {
       output.getTemplateBody must_== "template"
       output.getParameters must_== List(new Parameter().withParameterKey("key").withParameterValue("value")).asJava
       output.getCapabilities must_== List(CAPABILITY_IAM.toString).asJava
+      output.getRoleARN must beNull
+    }
+
+    "set RoleARN on CreateStackRequest" in {
+      val output: CreateStackRequest = StackDetails("name", "template", List.empty[Parameter], roleArn = Option("role-arn"))
+
+      output.getRoleARN must_== "role-arn"
+    }
+
+    "set RoleARN on UpdateStackRequest" in {
+      val output: UpdateStackRequest = StackDetails("name", "template", List.empty[Parameter], roleArn = Option("role-arn"))
+
+      output.getRoleARN must_== "role-arn"
     }
   }
 
