@@ -46,6 +46,22 @@ class ScalaAsyncHandlerSpec(implicit val executionEnv: ExecutionEnv) extends Spe
 
       output must throwA(IntentionalTestException).await
     }
+
+    "convert AmazonWebServicesRequest to a Future[Response]" in {
+      val fakeClient = new FakeAmazonAsyncClient(Right(FakeResponse("success!")))
+
+      val output = new FakeAmazonWebServiceRequest().via(fakeClient.fakeAsync)
+
+      output must be_==(FakeResponse("success!")).await
+    }
+
+    "capture exceptions from passed method" in {
+      val fakeClient = new FakeAmazonAsyncClient(Left(IntentionalTestException))
+
+      val output = new FakeAmazonWebServiceRequest().via(fakeClient.fakeAsync)
+
+      output must throwA(IntentionalTestException).await
+    }
   }
 }
 

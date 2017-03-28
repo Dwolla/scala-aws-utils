@@ -16,12 +16,10 @@ class ScalaAsyncHandler[A <: AmazonWebServiceRequest, B] extends AsyncHandler[A,
 }
 
 object ScalaAsyncHandler {
+  type AwsAsyncFunction[Request <: AmazonWebServiceRequest, Result] = (Request, AsyncHandler[Request, Result]) ⇒ JFuture[Result]
+
   object Implicits {
     implicit class RequestHolder[S <: AmazonWebServiceRequest](req: S) {
-      /*
-        This would be perfect if B could be provided as a mapping from S → the appropriate Result type. Then the type argument T could be removed from the signature and replaced
-        throughout with the mapped value.
-       */
       class BoundRequestHolder[T] {
         def via(body: (S, AsyncHandler[S, T]) ⇒ JFuture[T]): Future[T] = {
           val handler = new ScalaAsyncHandler[S, T]
@@ -30,7 +28,10 @@ object ScalaAsyncHandler {
         }
       }
 
+      @deprecated(message = "use RequestHolder.via(…) directly", since = "1.3.0")
       def to[T]: BoundRequestHolder[T] = new BoundRequestHolder[T]
+
+      def via[T](body: (S, AsyncHandler[S, T]) ⇒ JFuture[T]): Future[T] = new BoundRequestHolder[T].via(body)
     }
   }
 }
