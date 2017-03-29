@@ -2,14 +2,17 @@ package com.dwolla.awssdk.cloudformation
 
 import java.io.Closeable
 
+import com.amazonaws.AmazonWebServiceRequest
 import com.amazonaws.regions.Regions
 import com.amazonaws.regions.Regions.US_WEST_2
 import com.amazonaws.services.cloudformation.model.Capability.CAPABILITY_IAM
+import com.amazonaws.services.cloudformation.model.ChangeSetType.{CREATE, UPDATE}
 import com.amazonaws.services.cloudformation.model.StackStatus._
 import com.amazonaws.services.cloudformation.model.{Parameter ⇒ AwsParameter, _}
 import com.amazonaws.services.cloudformation.{AmazonCloudFormationAsync, AmazonCloudFormationAsyncClient}
 import com.dwolla.awssdk.cloudformation.CloudFormationClient.{StackID, updatableStackStatuses}
 import com.dwolla.awssdk.cloudformation.Implicits._
+import com.dwolla.awssdk.utils.ScalaAsyncHandler.AwsAsyncFunction
 import com.dwolla.awssdk.utils.ScalaAsyncHandler.Implicits._
 
 import scala.collection.JavaConverters._
@@ -17,7 +20,11 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.language.{implicitConversions, reflectiveCalls}
 
 trait CloudFormationClient {
-  def createOrUpdateTemplate(stackName: String, template: String, params: List[(String, String)] = List.empty[(String, String)], roleArn: Option[String] = None): Future[StackID]
+  def createOrUpdateTemplate(stackName: String,
+                             template: String,
+                             params: List[(String, String)] = List.empty[(String, String)],
+                             roleArn: Option[String] = None,
+                             changeSetName: Option[String] = None): Future[StackID]
 }
 
 class CloudFormationClientImpl(client: AmazonCloudFormationAsync)(implicit ec: ExecutionContext) extends CloudFormationClient with AutoCloseable with Closeable {
@@ -25,26 +32,36 @@ class CloudFormationClientImpl(client: AmazonCloudFormationAsync)(implicit ec: E
   override def createOrUpdateTemplate(stackName: String,
                                       template: String,
                                       params: List[(String, String)] = List.empty[(String, String)],
-                                      roleArn: Option[String] = None): Future[StackID] = {
+                                      roleArn: Option[String] = None,
+                                      changeSetName: Option[String] = None): Future[StackID] = {
     val requestBuilder = StackDetails(stackName, template, params, roleArn)
 
-    getStackByName(stackName).flatMap(
-      _.fold(createStack(requestBuilder)) {
-        case stack if updatableStackStatuses.contains(stackStatus(stack.getStackStatus)) ⇒ updateStack(requestBuilder)
+    getStackByName(stackName).flatMap { maybeStack ⇒
+      val stackOperation = maybeStack.fold(buildStackOperation(createStack, CREATE)) {
+        case stack if updatableStackStatuses.contains(stackStatus(stack.getStackStatus)) ⇒ buildStackOperation(updateStack, UPDATE)
         case stack ⇒ throw StackNotUpdatableException(stack.getStackName, stack.getStackStatus)
       }
-    )
+
+      stackOperation(requestBuilder, changeSetName)
+    }
   }
 
-  private def getStackByName(name: String): Future[Option[Stack]] = new DescribeStacksRequest().to[DescribeStacksResult].via(client.describeStacksAsync)
+  private def buildStackOperation[T](func: T ⇒ Future[StackID], changeSetType: ChangeSetType)
+                                    (implicit ev1: StackDetails ⇒ T): (StackDetails, Option[String]) ⇒ Future[StackID] =
+    (stackDetails: StackDetails, changeSetName: Option[String]) ⇒ changeSetName.fold(func(stackDetails))(createChangeSet(_, stackDetails.withChangeSetType(changeSetType)))
+
+  private def getStackByName(name: String): Future[Option[Stack]] = new DescribeStacksRequest().via(client.describeStacksAsync)
     .map(_.getStacks.asScala.filter(s ⇒ s.getStackName == name && StackStatus.valueOf(s.getStackStatus) != DELETE_COMPLETE).toList.headOption)
 
-  private def createStack(createStackRequest: CreateStackRequest): Future[StackID] = extractStackIdFrom(createStackRequest.to[CreateStackResult].via(client.createStackAsync))
+  private def createStack(createStackRequest: CreateStackRequest): Future[StackID] = makeRequestAndExtractStackId(createStackRequest, client.createStackAsync)
 
-  private def updateStack(updateStackRequest: UpdateStackRequest): Future[StackID] = extractStackIdFrom(updateStackRequest.to[UpdateStackResult].via(client.updateStackAsync))
+  private def updateStack(updateStackRequest: UpdateStackRequest): Future[StackID] = makeRequestAndExtractStackId(updateStackRequest, client.updateStackAsync)
+
+  private def createChangeSet(changeSetName: String, createChangeSetRequest: CreateChangeSetRequest): Future[StackID] = makeRequestAndExtractStackId(createChangeSetRequest.withChangeSetName(changeSetName), client.createChangeSetAsync)
 
   //noinspection AccessorLikeMethodIsEmptyParen
-  private def extractStackIdFrom[AwsResult <: {def getStackId(): StackID}](eventualResult: Future[AwsResult]): Future[StackID] = eventualResult.map(_.getStackId())
+  private def makeRequestAndExtractStackId[Req <: AmazonWebServiceRequest, Res <: {def getStackId(): StackID}](req: Req, func: AwsAsyncFunction[Req, Res]): Future[StackID] =
+    req.via(func).map(_.getStackId())
 
   override def close(): Unit = client.shutdown()
 }
@@ -91,6 +108,13 @@ object Implicits {
     override def withCapabilities(capabilities: Capability*): CreateStackRequest = s.withCapabilities(capabilities: _*)
     override def withRoleArn(roleArn: String): CreateStackRequest = s.withRoleARN(roleArn)
   }
+  implicit class CreateChangeSetRequestToBuilder(s: CreateChangeSetRequest) extends Builder[CreateChangeSetRequest] {
+    override def withStackName(name: String): CreateChangeSetRequest = s.withStackName(name)
+    override def withTemplateBody(name: String): CreateChangeSetRequest = s.withTemplateBody(name)
+    override def withParameters(params: List[AwsParameter]): CreateChangeSetRequest = s.withParameters(params.asJavaCollection)
+    override def withCapabilities(capabilities: Capability*): CreateChangeSetRequest = s.withCapabilities(capabilities: _*)
+    override def withRoleArn(roleArn: String): CreateChangeSetRequest = s.withRoleARN(roleArn)
+  }
   implicit class UpdateStackRequestToBuilder(s: UpdateStackRequest) extends Builder[UpdateStackRequest] {
     override def withStackName(name: String): UpdateStackRequest = s.withStackName(name)
     override def withTemplateBody(name: String): UpdateStackRequest = s.withTemplateBody(name)
@@ -101,6 +125,7 @@ object Implicits {
 
   implicit def potentialStackToCreateRequest(ps: StackDetails): CreateStackRequest = populate(ps, new CreateStackRequest)
   implicit def potentialStackToUpdateRequest(ps: StackDetails): UpdateStackRequest = populate(ps, new UpdateStackRequest)
+  implicit def potentialStackToCreateChangeSetRequest(ps: StackDetails): CreateChangeSetRequest = populate(ps, new CreateChangeSetRequest)
 
   implicit def tuplesToParams(tuples: List[(String, String)]): List[AwsParameter] = tuples.map {
     case (key, value) ⇒ new AwsParameter().withParameterKey(key).withParameterValue(value)
