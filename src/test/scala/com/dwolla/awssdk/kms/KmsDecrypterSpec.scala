@@ -391,4 +391,24 @@ class FakeAWSKMSAsync extends AWSKMSAsync {
   override def updateKeyDescription(updateKeyDescriptionRequest: UpdateKeyDescriptionRequest): UpdateKeyDescriptionResult = ???
 
   override def reEncrypt(reEncryptRequest: ReEncryptRequest): ReEncryptResult = ???
+
+  override def tagResourceAsync(tagResourceRequest: TagResourceRequest): JFuture[TagResourceResult] = ???
+
+  override def tagResourceAsync(tagResourceRequest: TagResourceRequest, asyncHandler: AsyncHandler[TagResourceRequest, TagResourceResult]): JFuture[TagResourceResult] = ???
+
+  override def untagResourceAsync(untagResourceRequest: UntagResourceRequest): JFuture[UntagResourceResult] = ???
+
+  override def untagResourceAsync(untagResourceRequest: UntagResourceRequest,
+                                  asyncHandler: AsyncHandler[UntagResourceRequest, UntagResourceResult]): JFuture[UntagResourceResult] = ???
+
+  override def listResourceTagsAsync(listResourceTagsRequest: ListResourceTagsRequest): JFuture[ListResourceTagsResult] = ???
+
+  override def listResourceTagsAsync(listResourceTagsRequest: ListResourceTagsRequest,
+                                     asyncHandler: AsyncHandler[ListResourceTagsRequest, ListResourceTagsResult]): JFuture[ListResourceTagsResult] = ???
+
+  override def untagResource(untagResourceRequest: UntagResourceRequest): UntagResourceResult = ???
+
+  override def tagResource(tagResourceRequest: TagResourceRequest): TagResourceResult = ???
+
+  override def listResourceTags(listResourceTagsRequest: ListResourceTagsRequest): ListResourceTagsResult = ???
 }

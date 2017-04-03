@@ -4,12 +4,17 @@ lazy val buildSettings = Seq(
   homepage := Some(url("https://github.com/Dwolla/scala-aws-utils")),
   description := "Utilities for interacting with the AWS SDKs from Scala",
   licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
-  version := "1.3.0",
+  releaseVersionBump := sbtrelease.Version.Bump.Minor,
+  releaseCommitMessage :=
+    s"""${releaseCommitMessage.value}
+       |
+       |[ci skip]""".stripMargin,
+  releaseCrossBuild := true,
   scalaVersion := "2.12.1",
   crossScalaVersions := Seq("2.10.6", "2.11.8", "2.12.1"),
   startYear := Option(2016),
   libraryDependencies ++= {
-    val awsSdkVersion = "1.11.75"
+    val awsSdkVersion = "1.11.113"
     val specs2Version = "3.8.6"
     Seq(
       "com.amazonaws"   %  "aws-java-sdk-core"            % awsSdkVersion,
@@ -24,7 +29,7 @@ lazy val buildSettings = Seq(
 )
 
 lazy val bintraySettings = Seq(
-  bintrayVcsUrl := Some("https://github.com/Dwolla/scala-aws-utils"),
+  bintrayVcsUrl := homepage.value.map(_.toString),
   publishMavenStyle := false,
   bintrayRepository := "maven",
   bintrayOrganization := Option("dwolla"),

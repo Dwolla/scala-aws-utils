@@ -4,19 +4,18 @@ import java.nio.ByteBuffer
 
 import com.amazonaws.regions.Regions
 import com.amazonaws.regions.Regions.US_WEST_2
-import com.amazonaws.services.kms.model.{DecryptRequest, DecryptResult}
-import com.amazonaws.services.kms.{AWSKMSAsync, AWSKMSAsyncClient}
+import com.amazonaws.services.kms.model.DecryptRequest
+import com.amazonaws.services.kms.{AWSKMSAsync, AWSKMSAsyncClientBuilder}
 import com.dwolla.awssdk.kms.KmsDecrypter._
 import com.dwolla.awssdk.utils.ScalaAsyncHandler.Implicits._
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class KmsDecrypter(region: Regions = US_WEST_2) extends AutoCloseable {
-  protected lazy val asyncClient: AWSKMSAsync = new AWSKMSAsyncClient().withRegion[AWSKMSAsyncClient](US_WEST_2)
+  protected lazy val asyncClient: AWSKMSAsync = AWSKMSAsyncClientBuilder.standard().withRegion(US_WEST_2).build()
 
   def decrypt[A](transformer: Transform[A], cryptotext: A)(implicit ec: ExecutionContext): Future[Array[Byte]] = new DecryptRequest()
     .withCiphertextBlob(ByteBuffer.wrap(transformer(cryptotext)))
-    .to[DecryptResult]
     .via(asyncClient.decryptAsync)
     .map(_.getPlaintext.array())
 
