@@ -7,11 +7,22 @@ scala:
 
 env:
   - JDK=oraclejdk8
+  - JDK=oraclejdk7
+
+matrix:
+  # scala 2.12 requires java 8
+  exclude:
+    - scala: 2.12.1
+      env: JDK=oraclejdk7
+    - scala: 2.11.8
+      env: JDK=oraclejdk8
+    - scala: 2.10.6
+      env: JDK=oraclejdk8
 
 before_script:
   - jdk_switcher use $JDK
 
-script: sbt ++$TRAVIS_SCALA_VERSION pipeline
+script: sbt ++$TRAVIS_SCALA_VERSION test
 
 before_deploy:
   - mkdir -p $HOME/.bintray $HOME/.ssh
@@ -26,3 +37,9 @@ deploy:
     on:
       branch: master
       scala: 2.12.1
+      condition: $(git log -n1 --format=format:"%an") != "Dwolla Bot"
+  - provider: script
+    script: sbt ++$TRAVIS_SCALA_VERSION publish
+    on:
+      tags: true
+      condition: $(git log -n1 --format=format:"%an") == "Dwolla Bot"
