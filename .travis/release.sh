@@ -2,15 +2,23 @@
 
 set -o errexit -o nounset
 
+USERNAME="Dwolla Bot"
+
+commit_username=$(git log -n1 --format=format:"%an")
+if [[ "$commit_username" == "$USERNAME" ]]; then
+  echo "Refusing to release a commit created by this script."
+  exit 0
+fi
+
 if [ "$TRAVIS_BRANCH" != "master" ]; then
   echo "Only the master branch will be released. This branch is $TRAVIS_BRANCH."
   exit 0
 fi
 
-git config user.name "Dwolla Bot"
+git config user.name "$USERNAME"
 git config user.email "dev+dwolla-bot@dwolla.com"
 
-git remote add release git@github.com:Dwolla/scala-aws-utils.git
+git remote add release https://$GH_TOKEN@github.com/Dwolla/scala-aws-utils.git
 git fetch release
 
 git clean -dxf
