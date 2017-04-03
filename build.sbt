@@ -5,11 +5,19 @@ lazy val buildSettings = Seq(
   description := "Utilities for interacting with the AWS SDKs from Scala",
   licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
   releaseVersionBump := sbtrelease.Version.Bump.Minor,
-  releaseCommitMessage :=
-    s"""${releaseCommitMessage.value}
-       |
-       |[ci skip]""".stripMargin,
-  releaseCrossBuild := true,
+  releaseProcess := {
+    import ReleaseTransformations._
+    Seq[ReleaseStep](
+      checkSnapshotDependencies,
+      inquireVersions,
+      setReleaseVersion,
+      commitReleaseVersion,
+      tagRelease,
+      setNextVersion,
+      commitNextVersion,
+      pushChanges
+    )
+  },
   scalaVersion := "2.12.1",
   crossScalaVersions := Seq("2.10.6", "2.11.8", "2.12.1"),
   startYear := Option(2016),
@@ -38,6 +46,3 @@ lazy val bintraySettings = Seq(
 
 lazy val scalaAwsUtils = (project in file("."))
   .settings(buildSettings ++ bintraySettings: _*)
-
-lazy val pipeline = TaskKey[Unit]("pipeline", "CI Pipeline")
-pipeline <<= test in Test

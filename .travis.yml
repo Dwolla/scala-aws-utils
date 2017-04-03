@@ -6,12 +6,26 @@ scala:
   - 2.12.1
 
 env:
-  - JDK=oraclejdk8
+  global:
+    - secure: "f1PX07OoUV8C10k0dZcuipWaEEGnFABJLjH8IZT/149qmQgz4NfaYltdfs9fPyDJ18iD2maJQI33iO/qjW0HuvXvtqmXFYxJFBd+4kSxFx5znzTUOKmJa7NoWIHYdsNbAH67+FPTlUL3pcmB2VHAZ2HX4VU6E3DqMsB7FwYEoS47Hmzk0czHfe6eNCCnDvnVznxytFtWkOxJD7oLi+VZo2+Ew9/CyI21MAxqpnZN0v3WgBek/Op+RH193ZRKaHcR/Hc7aBZ9pakCebcjSlEC9NNdhfUgSExt1TWY8ead4/vh3zlN1AZjL5rmaT9czogiRVbcNgYaKXyBO18R6waeZsMydFzvAvzTMPSS538OsJqNLhHI6oCvL+GZWmVRw0Wwfiafz+1/LqjrLy/Bk9bNnz/dsMtsAnrMwJ2BOoYC+l3RjLZjWm6glDGKygrIzXnEc5nVT7pimhGKQreix5CLZwpf5OLcibLoMyxl1eWh71cCqixbHubi8Wbezed4RKxMJD44elpLtml3dUXU7D2ctbOtAmYeax9CPic70Yp4Kf/8GpXGcDzaf/PLN6jZz8hmElj7XQVD7xBoNq3MXyp5lFDNbsdiGtHerQaDoY0X+wset7d8C0Izmg99o1Ri060UI4HlolOaGxWUDndAp6Y5SLUupUk9D1lK6qmmkqvs0mQ="
+  matrix:
+    - JDK=oraclejdk8
+    - JDK=oraclejdk7
+
+matrix:
+  # scala 2.12 requires java 8
+  exclude:
+    - scala: 2.12.1
+      env: JDK=oraclejdk7
+    - scala: 2.11.8
+      env: JDK=oraclejdk8
+    - scala: 2.10.6
+      env: JDK=oraclejdk8
 
 before_script:
   - jdk_switcher use $JDK
 
-script: sbt ++$TRAVIS_SCALA_VERSION pipeline
+script: sbt ++$TRAVIS_SCALA_VERSION test
 
 before_deploy:
   - mkdir -p $HOME/.bintray $HOME/.ssh
@@ -26,3 +40,9 @@ deploy:
     on:
       branch: master
       scala: 2.12.1
+      condition: $(git log -n1 --format=format:"%an") != "Dwolla Bot"
+  - provider: script
+    script: sbt ++$TRAVIS_SCALA_VERSION publish
+    on:
+      tags: true
+      condition: $(git log -n1 --format=format:"%an") == "Dwolla Bot"
