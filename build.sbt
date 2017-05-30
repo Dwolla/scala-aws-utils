@@ -1,8 +1,9 @@
-lazy val buildSettings = Seq(
+lazy val primaryName = "scala-aws-utils"
+lazy val specs2Version = "3.8.6"
+
+lazy val commonSettings = Seq(
   organization := "com.dwolla",
-  name := "scala-aws-utils",
   homepage := Some(url("https://github.com/Dwolla/scala-aws-utils")),
-  description := "Utilities for interacting with the AWS SDKs from Scala",
   licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
   releaseVersionBump := sbtrelease.Version.Bump.Minor,
   releaseProcess := {
@@ -23,7 +24,6 @@ lazy val buildSettings = Seq(
   startYear := Option(2016),
   libraryDependencies ++= {
     val awsSdkVersion = "1.11.113"
-    val specs2Version = "3.8.6"
     Seq(
       "com.amazonaws"   %  "aws-java-sdk-core"            % awsSdkVersion,
       "com.amazonaws"   %  "aws-java-sdk-cloudformation"  % awsSdkVersion % Provided,
@@ -37,6 +37,7 @@ lazy val buildSettings = Seq(
 )
 
 lazy val bintraySettings = Seq(
+  bintrayPackage := primaryName,
   bintrayVcsUrl := homepage.value.map(_.toString),
   publishMavenStyle := false,
   bintrayRepository := "maven",
@@ -45,4 +46,21 @@ lazy val bintraySettings = Seq(
 )
 
 lazy val scalaAwsUtils = (project in file("."))
-  .settings(buildSettings ++ bintraySettings: _*)
+  .settings({
+    Seq(
+      name := primaryName,
+      description := "Utilities for interacting with the AWS SDKs from Scala"
+    )
+  } ++ commonSettings ++ bintraySettings: _*)
+  .dependsOn(testkit)
+
+lazy val testkit = (project in file("testkit"))
+  .settings(Seq(
+    name := primaryName + "-testkit",
+    description := "Test utilities for interacting with the AWS SDKs from Scala",
+    libraryDependencies ++= {
+      Seq(
+        "org.specs2"      %% "specs2-mock"                  % specs2Version
+      )
+    }
+  ) ++ commonSettings ++ bintraySettings: _*)

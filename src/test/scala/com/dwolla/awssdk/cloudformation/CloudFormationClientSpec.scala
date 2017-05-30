@@ -1,18 +1,14 @@
 package com.dwolla.awssdk.cloudformation
 
-import java.util.concurrent.{Future ⇒ JFuture}
-
-import com.amazonaws.AmazonWebServiceRequest
 import com.amazonaws.handlers.AsyncHandler
 import com.amazonaws.services.cloudformation.AmazonCloudFormationAsync
 import com.amazonaws.services.cloudformation.model.StackStatus.UPDATE_COMPLETE
 import com.amazonaws.services.cloudformation.model._
+import com.dwolla.awssdk.AmazonAsyncMockingImplicits._
 import org.specs2.concurrent.ExecutionEnv
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
-import CloudFormationAsyncMethodImplicits._
-import scala.reflect.ClassTag
 
 //noinspection RedundantDefaultArgument
 class CloudFormationClientSpec(implicit ee: ExecutionEnv) extends Specification with Mockito {
@@ -86,24 +82,6 @@ class CloudFormationClientSpec(implicit ee: ExecutionEnv) extends Specification 
       requestCaptor.value must beLike { case req ⇒
         req.getChangeSetName must_== "change-set-name"
         req.getChangeSetType must_== "CREATE"
-      }
-    }
-  }
-
-}
-
-object CloudFormationAsyncMethodImplicits {
-  implicit class CloudFormationAsyncResult[Res](res: Res) {
-    import org.specs2.mock.mockito.MockitoMatchers._
-    import org.specs2.mock.mockito.MockitoStubs._
-
-    def completes[Req <: AmazonWebServiceRequest : ClassTag](func: (Req, AsyncHandler[Req, Res]) ⇒ JFuture[Res]): Unit = {
-      func(any[Req], any[AsyncHandler[Req, Res]]) answers { args ⇒
-        args match {
-          case Array(req: Req, handler: AsyncHandler[Req, Res]) ⇒
-            handler.onSuccess(req, res)
-        }
-        null
       }
     }
   }
