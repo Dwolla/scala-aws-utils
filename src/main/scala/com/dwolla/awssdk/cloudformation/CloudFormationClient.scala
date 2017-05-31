@@ -9,7 +9,7 @@ import com.amazonaws.services.cloudformation.model.Capability.CAPABILITY_IAM
 import com.amazonaws.services.cloudformation.model.ChangeSetType.{CREATE, UPDATE}
 import com.amazonaws.services.cloudformation.model.StackStatus._
 import com.amazonaws.services.cloudformation.model.{Parameter ⇒ AwsParameter, _}
-import com.amazonaws.services.cloudformation.{AmazonCloudFormationAsync, AmazonCloudFormationAsyncClient}
+import com.amazonaws.services.cloudformation.{AmazonCloudFormationAsync, AmazonCloudFormationAsyncClient, AmazonCloudFormationAsyncClientBuilder}
 import com.dwolla.awssdk.cloudformation.CloudFormationClient.{StackID, updatableStackStatuses}
 import com.dwolla.awssdk.cloudformation.Implicits._
 import com.dwolla.awssdk.utils.ScalaAsyncHandler.AwsAsyncFunction
@@ -83,11 +83,7 @@ object CloudFormationClient {
     UPDATE_ROLLBACK_COMPLETE
   )
 
-  private def clientForRegion(r: Regions) = {
-    val x = new AmazonCloudFormationAsyncClient()
-    x.configureRegion(r)
-    x
-  }
+  private def clientForRegion(r: Regions) = AmazonCloudFormationAsyncClientBuilder.standard().withRegion(r).build()
 }
 
 case class StackDetails(name: String, template: String, parameters: List[AwsParameter], roleArn: Option[String] = None)

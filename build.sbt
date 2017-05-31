@@ -1,5 +1,5 @@
 lazy val primaryName = "scala-aws-utils"
-lazy val specs2Version = "3.8.6"
+lazy val specs2Version = "3.8.9"
 
 lazy val commonSettings = Seq(
   organization := "com.dwolla",
@@ -23,7 +23,7 @@ lazy val commonSettings = Seq(
   crossScalaVersions := Seq("2.10.6", "2.11.8", "2.12.1"),
   startYear := Option(2016),
   libraryDependencies ++= {
-    val awsSdkVersion = "1.11.113"
+    val awsSdkVersion = "1.11.136"
     Seq(
       "com.amazonaws"   %  "aws-java-sdk-core"            % awsSdkVersion,
       "com.amazonaws"   %  "aws-java-sdk-cloudformation"  % awsSdkVersion % Provided,
@@ -52,7 +52,7 @@ lazy val scalaAwsUtils = (project in file("."))
       description := "Utilities for interacting with the AWS SDKs from Scala"
     )
   } ++ commonSettings ++ bintraySettings: _*)
-  .dependsOn(testkit)
+  .dependsOn(testkit % Test)
 
 lazy val testkit = (project in file("testkit"))
   .settings(Seq(
