@@ -12,7 +12,7 @@ import com.amazonaws.services.cloudformation.model.{Parameter ⇒ AwsParameter, 
 import com.amazonaws.services.cloudformation.{AmazonCloudFormationAsync, AmazonCloudFormationAsyncClient, AmazonCloudFormationAsyncClientBuilder}
 import com.dwolla.awssdk.cloudformation.CloudFormationClient.{StackID, updatableStackStatuses}
 import com.dwolla.awssdk.cloudformation.Implicits._
-import com.dwolla.awssdk.utils.ScalaAsyncHandler.AwsAsyncFunction
+import com.dwolla.awssdk.utils.AwsAsyncFunction
 import com.dwolla.awssdk.utils.ScalaAsyncHandler.Implicits._
 
 import scala.collection.JavaConverters._
