@@ -29,8 +29,9 @@ lazy val commonSettings = Seq(
       "com.amazonaws"   %  "aws-java-sdk-cloudformation"  % awsSdkVersion % Provided,
       "com.amazonaws"   %  "aws-java-sdk-kms"             % awsSdkVersion % Provided,
       "ch.qos.logback"  %  "logback-classic"              % "1.1.7",
-      "org.specs2"      %% "specs2-core"                  % specs2Version  % Test,
-      "org.specs2"      %% "specs2-mock"                  % specs2Version  % Test
+      "org.specs2"      %% "specs2-core"                  % specs2Version % Test,
+      "org.specs2"      %% "specs2-mock"                  % specs2Version % Test,
+      "com.amazonaws"   %  "aws-java-sdk-ecs"             % awsSdkVersion % Test
     )
   },
   scalacOptions += "-deprecation"
