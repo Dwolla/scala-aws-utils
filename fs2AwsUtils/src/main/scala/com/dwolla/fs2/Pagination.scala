@@ -12,8 +12,8 @@ object Pagination {
   private case class NextPage[S](token: S) extends PageIndicator[S]
   private case class NoMorePages[S]() extends PageIndicator[S]
 
-  def streamContainingAllPages[F[_], S, O](f: Option[S] ⇒ F[(Segment[O, Unit], Option[S])])
-                                          (implicit F: Applicative[F]): Stream[F, O] = {
+  def offsetUnfoldSegmentEval[F[_], S, O](f: Option[S] ⇒ F[(Segment[O, Unit], Option[S])])
+                                         (implicit F: Applicative[F]): Stream[F, O] = {
     def fetchPage(maybeNextPageToken: Option[S]): F[Option[(Segment[O, Unit], PageIndicator[S])]] = {
       f(maybeNextPageToken).map {
         case (segment, Some(nextToken)) ⇒ Option((segment, NextPage(nextToken)))
@@ -27,4 +27,9 @@ object Pagination {
       case NoMorePages() ⇒ F.pure(None)
     }
   }
+
+  def offsetUnfoldEval[F[_] : Applicative, S, O](f: Option[S] ⇒ F[(O, Option[S])]): Stream[F, O] =
+    offsetUnfoldSegmentEval[F, S, O](f(_).map {
+      case (o, maybeNextToken) ⇒ (Segment(o), maybeNextToken)
+    })
 }

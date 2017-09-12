@@ -20,7 +20,7 @@ object PaginatedAwsClient {
         req.executeVia[F](awsAsyncFunction).map((res: Res) ⇒ (Segment.seq(extractor(res)), Option(res.getNextToken())))
       }
 
-      Pagination.streamContainingAllPages(fetchPage)
+      Pagination.offsetUnfoldSegmentEval(fetchPage)
     }
   }
 
