@@ -9,7 +9,8 @@ import scala.language.higherKinds
 
 object ExecuteVia {
   implicit class RequestHolder[Req <: AmazonWebServiceRequest](req: Req) {
-    class EffectTypeBinding[F[_]] {
+    def executeVia[F[_]] = new PartiallyApplied[F]
+    final class PartiallyApplied[F[_]] {
       def apply[Res](awsAsyncFunction: AwsAsyncFunction[Req, Res])(implicit F: Effect[F]): F[Res] = F.async[Res] { callback ⇒
         awsAsyncFunction(req, new AsyncHandler[Req, Res] {
           override def onError(exception: Exception): Unit = callback(Left(exception))
@@ -19,7 +20,5 @@ object ExecuteVia {
         ()
       }
     }
-
-    def executeVia[F[_]] = new EffectTypeBinding[F]
   }
 }

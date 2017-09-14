@@ -13,7 +13,7 @@ object PaginatedAwsClient {
 
   class PaginatedAwsClient[F[_] : Effect, Req <: PaginatedRequest, Res <: PaginatedResult, T](requestFactory: () ⇒ Req) {
     def via(awsAsyncFunction: AwsAsyncFunction[Req, Res])(extractor: Res ⇒ Seq[T]): Stream[F, T] = {
-      def fetchPage(maybeNextToken: Option[String]): F[(Segment[T, Unit], Option[String])] = {
+      val fetchPage = (maybeNextToken: Option[String]) ⇒ {
         val req = requestFactory()
         maybeNextToken.foreach(req.setNextToken)
 
@@ -25,14 +25,13 @@ object PaginatedAwsClient {
   }
 
   implicit class FetchAll[Req <: PaginatedRequest](val requestFactory: () ⇒ Req) {
-    class EffectBinder[F[_]] {
+    def fetchAll[F[_]] = new PartiallyApplied[F]
+    final class PartiallyApplied[F[_]] {
       def apply[Res <: PaginatedResult, T](awsAsyncFunction: AwsAsyncFunction[Req, Res])
                                           (extractor: Res ⇒ Seq[T])
                                           (implicit F: Effect[F]): Stream[F, T] =
-        new PaginatedAwsClient[F, Req, Res, T](requestFactory).via(awsAsyncFunction)(extractor)
+        new PaginatedAwsClient(requestFactory).via(awsAsyncFunction)(extractor)
     }
-
-    def fetchAll[F[_]] = new EffectBinder[F]
   }
 
 }

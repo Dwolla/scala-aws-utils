@@ -23,7 +23,9 @@ lazy val commonSettings = Seq(
   scalaVersion := "2.12.3",
   crossScalaVersions := Seq("2.11.11", "2.12.3"),
   startYear := Option(2016),
-  scalacOptions += "-deprecation"
+  scalacOptions ++= Seq(
+    "-deprecation",
+  )
 )
 
 lazy val bintraySettings = Seq(
@@ -81,6 +83,7 @@ lazy val fs2AwsUtils = (project in file("fs2AwsUtils"))
       libraryDependencies ++= {
         Seq(
           "com.amazonaws"   %  "aws-java-sdk-core"            % awsSdkVersion,
+          "com.amazonaws"   %  "aws-java-sdk-cloudformation"  % awsSdkVersion,
           "co.fs2"          %% "fs2-core"                     % "0.10.0-M6",
         )
       },

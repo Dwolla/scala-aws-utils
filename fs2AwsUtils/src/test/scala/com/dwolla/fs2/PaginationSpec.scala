@@ -24,7 +24,7 @@ class PaginationSpec(implicit ee: ExecutionEnv) extends Specification {
 
       val stream: Stream[IO, Int] = Pagination.offsetUnfoldSegmentEval(fetchPage)
 
-      stream.runLog.unsafeToFuture() must be_==(0 until (lastPage + 1) * 10).await
+      stream.runLog.unsafeRunSync() must be_==(0 until (lastPage + 1) * 10)
     }
 
     "unfold the stream when the page function returns elements" >> {
@@ -42,7 +42,7 @@ class PaginationSpec(implicit ee: ExecutionEnv) extends Specification {
 
       val stream: Stream[IO, Int] = Pagination.offsetUnfoldEval(fetchPage)
 
-      stream.runLog.unsafeToFuture() must be_==(0 to lastPage).await
+      stream.runLog.unsafeRunSync() must be_==(0 to lastPage)
     }
   }
 

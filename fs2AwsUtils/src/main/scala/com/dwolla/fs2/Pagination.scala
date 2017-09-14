@@ -1,6 +1,7 @@
 package com.dwolla.fs2
 
 import cats.Applicative
+import cats.data.Kleisli
 import cats.implicits._
 import fs2.{Segment, Stream}
 
@@ -29,7 +30,5 @@ object Pagination {
   }
 
   def offsetUnfoldEval[F[_] : Applicative, S, O](f: Option[S] ⇒ F[(O, Option[S])]): Stream[F, O] =
-    offsetUnfoldSegmentEval[F, S, O](f(_).map {
-      case (o, maybeNextToken) ⇒ (Segment(o), maybeNextToken)
-    })
+    offsetUnfoldSegmentEval(Kleisli(f).map(tuple ⇒ (Segment(tuple._1), tuple._2)).run)
 }
