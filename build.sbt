@@ -1,5 +1,4 @@
 lazy val primaryName = "scala-aws-utils"
-lazy val specs2Version = "3.8.9"
 
 lazy val commonSettings = Seq(
   organization := "com.dwolla",
@@ -19,11 +18,13 @@ lazy val commonSettings = Seq(
       pushChanges
     )
   },
-  scalaVersion := "2.12.1",
-  crossScalaVersions := Seq("2.10.6", "2.11.8", "2.12.1"),
+  scalaVersion := "2.12.4",
+  crossScalaVersions := Seq("2.10.7", "2.11.12", "2.12.4"),
   startYear := Option(2016),
   libraryDependencies ++= {
     val awsSdkVersion = "1.11.136"
+    val specs2Version = "3.8.9"
+
     Seq(
       "com.amazonaws"   %  "aws-java-sdk-core"            % awsSdkVersion,
       "com.amazonaws"   %  "aws-java-sdk-cloudformation"  % awsSdkVersion % Provided,
@@ -61,7 +62,7 @@ lazy val testkit = (project in file("testkit"))
     description := "Test utilities for interacting with the AWS SDKs from Scala",
     libraryDependencies ++= {
       Seq(
-        "org.specs2"      %% "specs2-mock"                  % specs2Version
+        "org.mockito"   %  "mockito-core"                % "1.9.5"
       )
     }
   ) ++ commonSettings ++ bintraySettings: _*)
