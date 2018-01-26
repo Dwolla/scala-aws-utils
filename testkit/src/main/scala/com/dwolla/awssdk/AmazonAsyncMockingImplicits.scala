@@ -4,10 +4,15 @@ import java.util.concurrent.{Future ⇒ JFuture}
 
 import com.amazonaws.AmazonWebServiceRequest
 import com.amazonaws.handlers.AsyncHandler
+import org.mockito.Matchers._
+import org.mockito.Mockito._
+import org.mockito.invocation.InvocationOnMock
+import org.mockito.stubbing.Answer
 
 import scala.language.implicitConversions
 import scala.reflect.ClassTag
 
+//noinspection ConvertExpressionToSAM
 object AmazonAsyncMockingImplicits {
 
   /**
@@ -40,15 +45,16 @@ object AmazonAsyncMockingImplicits {
     *
     */
   implicit class AmazonAsyncResult[Res](res: Res) {
-    import org.specs2.mock.mockito.MockitoMatchers._
-    import org.specs2.mock.mockito.MockitoStubs._
 
     def completes[Req <: AmazonWebServiceRequest : ClassTag](func: (Req, AsyncHandler[Req, Res]) ⇒ JFuture[Res]): Unit = {
-      func(any[Req], any[AsyncHandler[Req, Res]]) answers { args ⇒
-        args match {
-          case Array(req: Req, handler: AsyncHandler[Req, Res]) ⇒ handler.onSuccess(req, res)
+
+      when(func(any[Req], any[AsyncHandler[Req, Res]])) thenAnswer new Answer[JFuture[Res]] {
+        override def answer(invocation: InvocationOnMock): JFuture[Res] = {
+          invocation.getArguments match {
+            case Array(req: Req, handler: AsyncHandler[Req, Res]) ⇒ handler.onSuccess(req, res)
+          }
+          null
         }
-        null
       }
     }
   }
@@ -69,19 +75,19 @@ object AmazonAsyncMockingImplicits {
     */
   implicit class AmazonAsyncResults[Req <: AmazonWebServiceRequest : ClassTag, Res](responseMapping: Map[Req, Either[Exception, Res]]) {
 
-    import org.specs2.mock.mockito.MockitoMatchers._
-    import org.specs2.mock.mockito.MockitoStubs._
-
     def completes(func: (Req, AsyncHandler[Req, Res]) ⇒ JFuture[Res]): Unit = {
-      func(any[Req], any[AsyncHandler[Req, Res]]) answers { args ⇒
-        args match {
-          case Array(req: Req, _) if !responseMapping.contains(req) ⇒ throw TestSetupException(s"req/res mapping does not contain `$req`. Look at the mock setup: is an expected case missing?")
-          case Array(req: Req, handler: AsyncHandler[Req, Res]) ⇒ responseMapping(req) match {
-            case Left(ex) ⇒ handler.onError(ex)
-            case Right(res) ⇒ handler.onSuccess(req, res)
+      when(func(any[Req], any[AsyncHandler[Req, Res]])) thenAnswer new Answer[JFuture[Res]] {
+        override def answer(invocation: InvocationOnMock): JFuture[Res] = {
+          invocation.getArguments match {
+            case Array(req: Req,
+            _) if !responseMapping.contains(req) ⇒ throw TestSetupException(s"req/res mapping does not contain `$req`. Look at the mock setup: is an expected case missing?")
+            case Array(req: Req, handler: AsyncHandler[Req, Res]) ⇒ responseMapping(req) match {
+              case Left(ex) ⇒ handler.onError(ex)
+              case Right(res) ⇒ handler.onSuccess(req, res)
+            }
           }
+          null
         }
-        null
       }
     }
 
