@@ -41,8 +41,3 @@ deploy:
       branch: master
       scala: 2.12.4
       condition: $(git log -n1 --format=format:"%an") != "Dwolla Bot"
-  - provider: script
-    script: sbt ++$TRAVIS_SCALA_VERSION publish testkit/publish
-    on:
-      tags: true
-      condition: $(git log -n1 --format=format:"%an") == "Dwolla Bot"

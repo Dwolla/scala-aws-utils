@@ -5,31 +5,19 @@ lazy val commonSettings = Seq(
   homepage := Some(url("https://github.com/Dwolla/scala-aws-utils")),
   licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
   releaseVersionBump := sbtrelease.Version.Bump.Minor,
-  releaseProcess := {
-    import ReleaseTransformations._
-    Seq[ReleaseStep](
-      checkSnapshotDependencies,
-      inquireVersions,
-      setReleaseVersion,
-      commitReleaseVersion,
-      tagRelease,
-      setNextVersion,
-      commitNextVersion,
-      pushChanges
-    )
-  },
+  releaseCrossBuild := true,
   scalaVersion := "2.12.4",
   crossScalaVersions := Seq("2.10.7", "2.11.12", "2.12.4"),
   startYear := Option(2016),
   libraryDependencies ++= {
-    val awsSdkVersion = "1.11.136"
+    val awsSdkVersion = "1.11.271"
     val specs2Version = "3.8.9"
 
     Seq(
       "com.amazonaws"   %  "aws-java-sdk-core"            % awsSdkVersion,
       "com.amazonaws"   %  "aws-java-sdk-cloudformation"  % awsSdkVersion % Provided,
       "com.amazonaws"   %  "aws-java-sdk-kms"             % awsSdkVersion % Provided,
-      "ch.qos.logback"  %  "logback-classic"              % "1.1.7",
+      "ch.qos.logback"  %  "logback-classic"              % "1.2.3",
       "org.specs2"      %% "specs2-core"                  % specs2Version % Test,
       "org.specs2"      %% "specs2-mock"                  % specs2Version % Test,
       "com.amazonaws"   %  "aws-java-sdk-ecs"             % awsSdkVersion % Test
@@ -41,7 +29,6 @@ lazy val commonSettings = Seq(
 lazy val bintraySettings = Seq(
   bintrayPackage := primaryName,
   bintrayVcsUrl := homepage.value.map(_.toString),
-  publishMavenStyle := false,
   bintrayRepository := "maven",
   bintrayOrganization := Option("dwolla"),
   pomIncludeRepository := { _ ⇒ false }
@@ -55,6 +42,7 @@ lazy val scalaAwsUtils = (project in file("."))
     )
   } ++ commonSettings ++ bintraySettings: _*)
   .dependsOn(testkit % Test)
+  .aggregate(testkit)
 
 lazy val testkit = (project in file("testkit"))
   .settings(Seq(
