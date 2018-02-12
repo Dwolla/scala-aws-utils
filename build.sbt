@@ -10,8 +10,8 @@ lazy val commonSettings = Seq(
   crossScalaVersions := Seq("2.10.7", "2.11.12", "2.12.4"),
   startYear := Option(2016),
   libraryDependencies ++= {
-    val awsSdkVersion = "1.11.271"
-    val specs2Version = "3.8.9"
+    val awsSdkVersion = "1.11.275"
+    val specs2Version = "4.0.2"
 
     Seq(
       "com.amazonaws"   %  "aws-java-sdk-core"            % awsSdkVersion,
@@ -50,7 +50,7 @@ lazy val testkit = (project in file("testkit"))
     description := "Test utilities for interacting with the AWS SDKs from Scala",
     libraryDependencies ++= {
       Seq(
-        "org.mockito"   %  "mockito-core"                % "1.9.5"
+        "org.mockito"   %  "mockito-core"                % "2.15.0"
       )
     }
   ) ++ commonSettings ++ bintraySettings: _*)

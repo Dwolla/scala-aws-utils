@@ -13,13 +13,13 @@ Projects including this library will also need to explicitly include the AWS SDK
 #### Library
 
 ```scala
-"com.dwolla" %% "scala-aws-utils" % "1.4.0"
+"com.dwolla" %% "scala-aws-utils" % "2.0.0"
 ```
 
 #### Test Kit
 
 ```scala
-"com.dwolla" %% "scala-aws-utils-testkit" % "1.4.0" % Test
+"com.dwolla" %% "scala-aws-utils-testkit" % "2.0.0" % Test
 ```
 
 The test kit provides helpers to make mocking the Amazon Async Clients easier. The clients have interfaces like
