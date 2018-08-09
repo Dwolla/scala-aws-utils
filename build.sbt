@@ -6,12 +6,10 @@ lazy val commonSettings = Seq(
   licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
   releaseVersionBump := sbtrelease.Version.Bump.Minor,
   releaseCrossBuild := true,
-  scalaVersion := "2.12.4",
-  crossScalaVersions := Seq("2.10.7", "2.11.12", "2.12.4"),
   startYear := Option(2016),
   libraryDependencies ++= {
-    val awsSdkVersion = "1.11.271"
-    val specs2Version = "3.8.9"
+    val awsSdkVersion = "1.11.331"
+    val specs2Version = "3.10.0"
 
     Seq(
       "com.amazonaws"   %  "aws-java-sdk-core"            % awsSdkVersion,

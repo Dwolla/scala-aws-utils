@@ -3,7 +3,7 @@ language: scala
 scala:
   - 2.10.7
   - 2.11.12
-  - 2.12.4
+  - 2.12.6
 
 env:
   global:
@@ -15,7 +15,7 @@ env:
 matrix:
   # scala 2.12 requires java 8
   exclude:
-    - scala: 2.12.4
+    - scala: 2.12.6
       env: JDK=oraclejdk7
     - scala: 2.11.12
       env: JDK=oraclejdk8
@@ -39,5 +39,5 @@ deploy:
     script: .travis/release.sh
     on:
       branch: master
-      scala: 2.12.4
+      scala: 2.12.6
       condition: $(git log -n1 --format=format:"%an") != "Dwolla Bot"
