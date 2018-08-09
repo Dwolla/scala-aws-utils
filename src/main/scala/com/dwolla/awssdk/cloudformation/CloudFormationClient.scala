@@ -5,18 +5,18 @@ import java.io.Closeable
 import com.amazonaws.AmazonWebServiceRequest
 import com.amazonaws.regions.Regions
 import com.amazonaws.regions.Regions.US_WEST_2
+import com.amazonaws.services.cloudformation._
 import com.amazonaws.services.cloudformation.model.Capability.CAPABILITY_IAM
-import com.amazonaws.services.cloudformation.model.ChangeSetType.{CREATE, UPDATE}
+import com.amazonaws.services.cloudformation.model.ChangeSetType._
 import com.amazonaws.services.cloudformation.model.StackStatus._
 import com.amazonaws.services.cloudformation.model.{Parameter ⇒ AwsParameter, _}
-import com.amazonaws.services.cloudformation.{AmazonCloudFormationAsync, AmazonCloudFormationAsyncClient, AmazonCloudFormationAsyncClientBuilder}
-import com.dwolla.awssdk.cloudformation.CloudFormationClient.{StackID, updatableStackStatuses}
+import com.dwolla.awssdk.cloudformation.CloudFormationClient._
 import com.dwolla.awssdk.cloudformation.Implicits._
-import com.dwolla.awssdk.utils.AwsAsyncFunction
 import com.dwolla.awssdk.utils.ScalaAsyncHandler.Implicits._
+import com.dwolla.awssdk.utils._
 
 import scala.collection.JavaConverters._
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent._
 import scala.language.{implicitConversions, reflectiveCalls}
 
 trait CloudFormationClient {
@@ -50,8 +50,11 @@ class CloudFormationClientImpl(client: AmazonCloudFormationAsync)(implicit ec: E
                                     (implicit ev1: StackDetails ⇒ T): (StackDetails, Option[String]) ⇒ Future[StackID] =
     (stackDetails: StackDetails, changeSetName: Option[String]) ⇒ changeSetName.fold(func(stackDetails))(createChangeSet(_, stackDetails.withChangeSetType(changeSetType)))
 
-  private def getStackByName(name: String): Future[Option[Stack]] = new DescribeStacksRequest().via(client.describeStacksAsync)
-    .map(_.getStacks.asScala.filter(s ⇒ s.getStackName == name && StackStatus.valueOf(s.getStackStatus) != DELETE_COMPLETE).toList.headOption)
+  private def getStackByName(name: String): Future[Option[Stack]] =
+    for {
+      results ← PaginatedResponseRetriever.fetchAll(() ⇒ new DescribeStacksRequest(), client.describeStacksAsync)
+      stacks = results.flatMap(_.getStacks.asScala)
+    } yield stacks.find(s ⇒ s.getStackName == name && StackStatus.valueOf(s.getStackStatus) != DELETE_COMPLETE)
 
   private def createStack(createStackRequest: CreateStackRequest): Future[StackID] = makeRequestAndExtractStackId(createStackRequest, client.createStackAsync)
 
