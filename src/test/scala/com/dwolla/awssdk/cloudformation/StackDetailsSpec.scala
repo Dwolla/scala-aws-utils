@@ -3,7 +3,7 @@ package com.dwolla.awssdk.cloudformation
 import com.amazonaws.services.cloudformation.model.{CreateChangeSetRequest, CreateStackRequest, Parameter, UpdateStackRequest}
 import org.specs2.mutable.Specification
 
-import collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import com.amazonaws.services.cloudformation.model.Capability.CAPABILITY_IAM
 import Implicits._
 

@@ -1,15 +1,14 @@
 package com.dwolla.awssdk
 
-import java.util.concurrent.{Future ⇒ JFuture}
+import java.util.concurrent.{Future => JFuture}
 
 import com.amazonaws.AmazonWebServiceRequest
 import com.amazonaws.handlers.AsyncHandler
-import org.mockito.Matchers._
+import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
 import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
 
-import scala.language.implicitConversions
 import scala.reflect.ClassTag
 
 //noinspection ConvertExpressionToSAM
@@ -23,8 +22,8 @@ object AmazonAsyncMockingImplicits {
     *   import com.amazonaws.services.cloudformation.model.{UpdateStackRequest, UpdateStackResult}
     *
     *   mockedMethod(mock[AmazonCloudFormationAsync].updateStackAsync) answers(
-    *     new UpdateStackRequest() → new UpdateStackResult(),
-    *     new UpdateStackRequest().withStackName("bad-name") → new RuntimeException("bad stack name!")
+    *     new UpdateStackRequest() -> new UpdateStackResult(),
+    *     new UpdateStackRequest().withStackName("bad-name") -> new RuntimeException("bad stack name!")
     *   )
     * }}}
     *
@@ -33,7 +32,7 @@ object AmazonAsyncMockingImplicits {
     * @tparam Res an Amazon web service result object
     * @return MockAnswerMappingBuilder
     */
-  def mockedMethod[Req <: AmazonWebServiceRequest : ClassTag, Res](func: (Req, AsyncHandler[Req, Res]) ⇒ JFuture[Res]): MockAnswerMappingBuilder[Req, Res] = new MockAnswerMappingBuilder(func)
+  def mockedMethod[Req <: AmazonWebServiceRequest : ClassTag, Res](func: (Req, AsyncHandler[Req, Res]) => JFuture[Res]): MockAnswerMappingBuilder[Req, Res] = new MockAnswerMappingBuilder(func)
 
   /**
     * For example:
@@ -46,16 +45,18 @@ object AmazonAsyncMockingImplicits {
     */
   implicit class AmazonAsyncResult[Res](res: Res) {
 
-    def completes[Req <: AmazonWebServiceRequest : ClassTag](func: (Req, AsyncHandler[Req, Res]) ⇒ JFuture[Res]): Unit = {
-
+    def completes[Req <: AmazonWebServiceRequest : ClassTag](func: (Req, AsyncHandler[Req, Res]) => JFuture[Res]): Unit = {
       when(func(any[Req], any[AsyncHandler[Req, Res]])) thenAnswer new Answer[JFuture[Res]] {
         override def answer(invocation: InvocationOnMock): JFuture[Res] = {
           invocation.getArguments match {
-            case Array(req: Req, handler: AsyncHandler[Req, Res]) ⇒ handler.onSuccess(req, res)
+            case Array(req: Req, handler: AsyncHandler[Req, Res] @unchecked) => handler.onSuccess(req, res)
+            case _ => throw new IllegalStateException("mock not called with correct arguments")
           }
           null
         }
       }
+
+      ()
     }
   }
 
@@ -68,33 +69,35 @@ object AmazonAsyncMockingImplicits {
     *   import com.amazonaws.services.ecs.model.{Cluster, DescribeClustersResult, ListContainerInstancesRequest, ListContainerInstancesResult}
     *
     *   Map(
-    *     new ListContainerInstancesRequest().withCluster("cluster1") → new ListContainerInstancesResult().withContainerInstanceArns("arn1").withNextToken("next-token"),
-    *     new ListContainerInstancesRequest().withCluster("cluster1").withNextToken("next-token") → new ListContainerInstancesResult().withContainerInstanceArns("arn2")
+    *     new ListContainerInstancesRequest().withCluster("cluster1") -> new ListContainerInstancesResult().withContainerInstanceArns("arn1").withNextToken("next-token"),
+    *     new ListContainerInstancesRequest().withCluster("cluster1").withNextToken("next-token") -> new ListContainerInstancesResult().withContainerInstanceArns("arn2")
     *   ) completes mock[AmazonECSAsync].listContainerInstancesAsync
     * }}}
     */
   implicit class AmazonAsyncResults[Req <: AmazonWebServiceRequest : ClassTag, Res](responseMapping: Map[Req, Either[Exception, Res]]) {
 
-    def completes(func: (Req, AsyncHandler[Req, Res]) ⇒ JFuture[Res]): Unit = {
+    def completes(func: (Req, AsyncHandler[Req, Res]) => JFuture[Res]): Unit = {
       when(func(any[Req], any[AsyncHandler[Req, Res]])) thenAnswer new Answer[JFuture[Res]] {
         override def answer(invocation: InvocationOnMock): JFuture[Res] = {
           invocation.getArguments match {
-            case Array(req: Req,
-            _) if !responseMapping.contains(req) ⇒ throw TestSetupException(s"req/res mapping does not contain `$req`. Look at the mock setup: is an expected case missing?")
-            case Array(req: Req, handler: AsyncHandler[Req, Res]) ⇒ responseMapping(req) match {
-              case Left(ex) ⇒ handler.onError(ex)
-              case Right(res) ⇒ handler.onSuccess(req, res)
+            case Array(req: Req, _) if !responseMapping.contains(req) => throw TestSetupException(s"req/res mapping does not contain `$req`. Look at the mock setup: is an expected case missing?")
+            case Array(req: Req, handler: AsyncHandler[Req, Res]) => responseMapping(req) match {
+              case Left(ex) => handler.onError(ex)
+              case Right(res) => handler.onSuccess(req, res)
             }
+            case _ => throw new IllegalStateException("mock not called with correct arguments")
           }
           null
         }
       }
+
+      ()
     }
 
     case class TestSetupException(msg: String) extends RuntimeException(msg)
   }
 
-  class MockAnswerMappingBuilder[Req <: AmazonWebServiceRequest : ClassTag, Res](func: (Req, AsyncHandler[Req, Res]) ⇒ JFuture[Res]) {
+  class MockAnswerMappingBuilder[Req <: AmazonWebServiceRequest : ClassTag, Res](func: (Req, AsyncHandler[Req, Res]) => JFuture[Res]) {
     def answers(requestResponseMappings: (Req, Either[Exception, Res])*): Unit = Map(requestResponseMappings: _*) completes func
   }
 

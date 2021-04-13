@@ -1,7 +1,7 @@
 package com.dwolla.awssdk.kms
 
 import java.nio.ByteBuffer
-import java.util.concurrent.{Future ⇒ JFuture}
+import java.util.concurrent.{Future => JFuture}
 
 import com.amazonaws.handlers.AsyncHandler
 import com.amazonaws.regions.Region
@@ -51,10 +51,10 @@ class KmsDecrypterSpec(implicit ee: ExecutionEnv) extends Specification with Moc
 
       "decrypt by passing the right values to the AWS SDK" in new FakeSetup {
         val inputBytes = randomBytes()
-        val promisedInputBytes = Promise[Array[Byte]]
+        val promisedInputBytes = Promise[Array[Byte]]()
         val expectedBytes = "it worked".getBytes("UTF-8")
 
-        fakeClient.promisedAction.success((req: DecryptRequest, handler: AsyncHandler[DecryptRequest, DecryptResult]) ⇒ {
+        fakeClient.promisedAction.success((req: DecryptRequest, handler: AsyncHandler[DecryptRequest, DecryptResult]) => {
           promisedInputBytes.success(req.getCiphertextBlob.array())
           handler.onSuccess(req, new DecryptResult().withPlaintext(ByteBuffer.wrap(expectedBytes)))
         })
@@ -66,7 +66,7 @@ class KmsDecrypterSpec(implicit ee: ExecutionEnv) extends Specification with Moc
       }
 
       "bulk decrypt by passing the right values to the decrypt method, and sequencing the responses" >> {
-        val decryptMap = Map("crypto1" → "plaintext1", "crypto2" → "plaintext2").transform((_, value) ⇒ value.getBytes("UTF-8"))
+        val decryptMap = Map("crypto1" -> "plaintext1", "crypto2" -> "plaintext2").transform((_, value) => value.getBytes("UTF-8"))
 
         val testInstance = new KmsDecrypter() {
           override def decrypt[A](transformer: Transform[A], cryptotext: A)
@@ -76,15 +76,15 @@ class KmsDecrypterSpec(implicit ee: ExecutionEnv) extends Specification with Moc
           }
         }
 
-        val output = testInstance.decrypt(KmsDecrypter.base64DecodingTransform, "first" → "crypto1", "second" → "crypto2")
+        val output = testInstance.decrypt(KmsDecrypter.base64DecodingTransform, "first" -> "crypto1", "second" -> "crypto2")
 
-        output must havePair("first" → decryptMap("crypto1")).await
-        output must havePair("second" → decryptMap("crypto2")).await
+        output must havePair("first" -> decryptMap("crypto1")).await
+        output must havePair("second" -> decryptMap("crypto2")).await
       }
 
       "Base64 bulk decrypt by passing the right transform to bulk decrypt" >> {
-        val passedTransform = Promise[Transform[_]]
-        val passedCryptoText = Promise[Seq[(String, _)]]
+        val passedTransform = Promise[Transform[_]]()
+        val passedCryptoText = Promise[Seq[(String, _)]]()
 
         val testInstance = new KmsDecrypter() {
           override def decrypt[A](transform: Transform[A], cryptotexts: (String, A)*)
@@ -96,10 +96,10 @@ class KmsDecrypterSpec(implicit ee: ExecutionEnv) extends Specification with Moc
           }
         }
 
-        testInstance.decryptBase64("first" → "crypto1", "second" → "crypto2")
+        testInstance.decryptBase64("first" -> "crypto1", "second" -> "crypto2")
 
         passedTransform.future must be_==(KmsDecrypter.base64DecodingTransform).await
-        passedCryptoText.future must be_==(Seq("first" → "crypto1", "second" → "crypto2")).await
+        passedCryptoText.future must be_==(Seq("first" -> "crypto1", "second" -> "crypto2")).await
       }
 
     }
@@ -118,7 +118,7 @@ class KmsDecrypterSpec(implicit ee: ExecutionEnv) extends Specification with Moc
       "base64 decoding transform" should {
         "decode the Base64-encoded string" in new MockSetup {
           val expectedBytes = randomBytes()
-          val input = javax.xml.bind.DatatypeConverter.printBase64Binary(expectedBytes)
+          val input: String = java.util.Base64.getEncoder.encodeToString(expectedBytes)
 
           val output = KmsDecrypter.base64DecodingTransform(input)
 
@@ -138,8 +138,8 @@ class KmsDecrypterSpec(implicit ee: ExecutionEnv) extends Specification with Moc
 
 //noinspection NotImplementedCode
 class FakeAWSKMSAsync extends AWSKMSAsync {
-  val promisedDecryptRequest = Promise[DecryptRequest]
-  val promisedAction = Promise[(DecryptRequest, AsyncHandler[DecryptRequest, DecryptResult]) ⇒ Unit]
+  val promisedDecryptRequest = Promise[DecryptRequest]()
+  val promisedAction = Promise[(DecryptRequest, AsyncHandler[DecryptRequest, DecryptResult]) => Unit]()
 
   override def decryptAsync(decryptRequest: DecryptRequest, asyncHandler: AsyncHandler[DecryptRequest, DecryptResult]): JFuture[DecryptResult] = {
     promisedDecryptRequest.success(decryptRequest)

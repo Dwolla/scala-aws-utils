@@ -7,6 +7,9 @@ import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 
+import scala.annotation.nowarn
+
+@nowarn
 class ScalaAsyncHandlerSpec(implicit val executionEnv: ExecutionEnv) extends Specification with Mockito {
 
   trait Setup extends Scope {
@@ -72,8 +75,8 @@ case object IntentionalTestException extends RuntimeException("exception intenti
 class FakeAmazonAsyncClient(expectedResponse: Either[Exception, FakeResponse]) {
   def fakeAsync(req: FakeAmazonWebServiceRequest, handler: AsyncHandler[FakeAmazonWebServiceRequest, FakeResponse]): java.util.concurrent.Future[FakeResponse] = {
     expectedResponse match {
-      case Left(ex) ⇒ handler.onError(ex)
-      case Right(res) ⇒ handler.onSuccess(req, res)
+      case Left(ex) => handler.onError(ex)
+      case Right(res) => handler.onSuccess(req, res)
     }
 
     null

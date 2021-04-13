@@ -9,15 +9,14 @@ import com.amazonaws.services.cloudformation._
 import com.amazonaws.services.cloudformation.model.Capability.CAPABILITY_IAM
 import com.amazonaws.services.cloudformation.model.ChangeSetType._
 import com.amazonaws.services.cloudformation.model.StackStatus._
-import com.amazonaws.services.cloudformation.model.{Parameter ⇒ AwsParameter, _}
+import com.amazonaws.services.cloudformation.model.{Parameter => AwsParameter, _}
 import com.dwolla.awssdk.cloudformation.CloudFormationClient._
 import com.dwolla.awssdk.cloudformation.Implicits._
 import com.dwolla.awssdk.utils.ScalaAsyncHandler.Implicits._
 import com.dwolla.awssdk.utils._
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.concurrent._
-import scala.language.{implicitConversions, reflectiveCalls}
 
 trait CloudFormationClient {
   def createOrUpdateTemplate(stackName: String,
@@ -36,25 +35,25 @@ class CloudFormationClientImpl(client: AmazonCloudFormationAsync)(implicit ec: E
                                       changeSetName: Option[String] = None): Future[StackID] = {
     val requestBuilder = StackDetails(stackName, template, params, roleArn)
 
-    getStackByName(stackName).flatMap { maybeStack ⇒
+    getStackByName(stackName).flatMap { maybeStack =>
       val stackOperation = maybeStack.fold(buildStackOperation(createStack, CREATE)) {
-        case stack if updatableStackStatuses.contains(stackStatus(stack.getStackStatus)) ⇒ buildStackOperation(updateStack, UPDATE)
-        case stack ⇒ throw StackNotUpdatableException(stack.getStackName, stack.getStackStatus)
+        case stack if updatableStackStatuses.contains(stackStatus(stack.getStackStatus)) => buildStackOperation(updateStack, UPDATE)
+        case stack => throw StackNotUpdatableException(stack.getStackName, stack.getStackStatus)
       }
 
       stackOperation(requestBuilder, changeSetName)
     }
   }
 
-  private def buildStackOperation[T](func: T ⇒ Future[StackID], changeSetType: ChangeSetType)
-                                    (implicit ev1: StackDetails ⇒ T): (StackDetails, Option[String]) ⇒ Future[StackID] =
-    (stackDetails: StackDetails, changeSetName: Option[String]) ⇒ changeSetName.fold(func(stackDetails))(createChangeSet(_, stackDetails.withChangeSetType(changeSetType)))
+  private def buildStackOperation[T](func: T => Future[StackID], changeSetType: ChangeSetType)
+                                    (implicit ev1: StackDetails => T): (StackDetails, Option[String]) => Future[StackID] =
+    (stackDetails: StackDetails, changeSetName: Option[String]) => changeSetName.fold(func(stackDetails))(createChangeSet(_, stackDetails.withChangeSetType(changeSetType)))
 
   private def getStackByName(name: String): Future[Option[Stack]] =
     for {
-      results ← PaginatedResponseRetriever.fetchAll(() ⇒ new DescribeStacksRequest(), client.describeStacksAsync)
+      results <- PaginatedResponseRetriever.fetchAll(() => new DescribeStacksRequest(), client.describeStacksAsync)
       stacks = results.flatMap(_.getStacks.asScala)
-    } yield stacks.find(s ⇒ s.getStackName == name && StackStatus.valueOf(s.getStackStatus) != DELETE_COMPLETE)
+    } yield stacks.find(s => s.getStackName == name && StackStatus.valueOf(s.getStackStatus) != DELETE_COMPLETE)
 
   private def createStack(createStackRequest: CreateStackRequest): Future[StackID] = makeRequestAndExtractStackId(createStackRequest, client.createStackAsync)
 
@@ -127,11 +126,11 @@ object Implicits {
   implicit def potentialStackToCreateChangeSetRequest(ps: StackDetails): CreateChangeSetRequest = populate(ps, new CreateChangeSetRequest)
 
   implicit def tuplesToParams(tuples: List[(String, String)]): List[AwsParameter] = tuples.map {
-    case (key, value) ⇒ new AwsParameter().withParameterKey(key).withParameterValue(value)
+    case (key, value) => new AwsParameter().withParameterKey(key).withParameterValue(value)
   }
   implicit def stackStatus(status: String): StackStatus = StackStatus.valueOf(status)
 
-  private def populate[T](ps:StackDetails, builder: Builder[T])(implicit ev: T ⇒ Builder[T]): T = {
+  private def populate[T](ps:StackDetails, builder: Builder[T])(implicit ev: T => Builder[T]): T = {
     val t = builder.withStackName(ps.name)
       .withTemplateBody(ps.template)
       .withParameters(ps.parameters)

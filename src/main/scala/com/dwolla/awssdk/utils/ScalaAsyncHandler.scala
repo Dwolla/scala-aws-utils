@@ -6,7 +6,7 @@ import com.amazonaws.handlers.AsyncHandler
 import scala.concurrent.{Future, Promise}
 
 class ScalaAsyncHandler[A <: AmazonWebServiceRequest, B] extends AsyncHandler[A, B] {
-  private val promise = Promise[B]
+  private val promise = Promise[B]()
   val future: Future[B] = promise.future
 
   override def onError(exception: Exception): Unit = promise.failure(exception)
