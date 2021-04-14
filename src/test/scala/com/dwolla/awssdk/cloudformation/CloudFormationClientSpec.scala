@@ -24,6 +24,21 @@ class CloudFormationClientSpec(implicit ee: ExecutionEnv) extends Specification 
     new CreateChangeSetResult().withStackId("stack-id-with-change-set") completes mockAsyncClient.createChangeSetAsync
   }
 
+  trait StackExistsOnSecondPageSetup extends Setup {
+    new UpdateStackResult().withStackId("updated-stack-id") completes mockAsyncClient.updateStackAsync
+
+    Map(
+      new DescribeStacksRequest() -> Right(new DescribeStacksResult()
+        .withNextToken("next-token")
+        .withStacks(new Stack().withStackId("diff-stack-id").withStackName("diff-stack-name").withStackStatus(UPDATE_COMPLETE))
+      ),
+      new DescribeStacksRequest().withNextToken("next-token") -> Right(new DescribeStacksResult()
+        .withStacks(new Stack().withStackId("stack-id").withStackName("stack-name").withStackStatus(UPDATE_COMPLETE))
+      )
+    ) completes mockAsyncClient.describeStacksAsync
+    new CreateChangeSetResult().withStackId("stack-id-with-change-set") completes mockAsyncClient.createChangeSetAsync
+  }
+
   trait StackMissingSetup extends Setup {
     new DescribeStacksResult() completes mockAsyncClient.describeStacksAsync
     new CreateStackResult().withStackId("created-stack-id") completes mockAsyncClient.createStackAsync
@@ -32,6 +47,16 @@ class CloudFormationClientSpec(implicit ee: ExecutionEnv) extends Specification 
 
   "createOrUpdateTemplate" should {
     "call update stack when the stack exists and no changeset name is specified" in new StackExistsSetup {
+      val output = client.createOrUpdateTemplate("stack-name", "{}", changeSetName = None)
+
+      output must be_==("updated-stack-id").await
+
+      there was one(mockAsyncClient).updateStackAsync(any[UpdateStackRequest], any[AsyncHandler[UpdateStackRequest, UpdateStackResult]])
+      there was no(mockAsyncClient).createChangeSetAsync(any[CreateChangeSetRequest], any[AsyncHandler[CreateChangeSetRequest, CreateChangeSetResult]])
+      there was no(mockAsyncClient).createStackAsync(any[CreateStackRequest], any[AsyncHandler[CreateStackRequest, CreateStackResult]])
+    }
+
+    "call update stack when the stack exists (but not on the first page of results) and no changeset name is specified" in new StackExistsOnSecondPageSetup {
       val output = client.createOrUpdateTemplate("stack-name", "{}", changeSetName = None)
 
       output must be_==("updated-stack-id").await
@@ -52,7 +77,7 @@ class CloudFormationClientSpec(implicit ee: ExecutionEnv) extends Specification 
       there was no(mockAsyncClient).updateStackAsync(any[UpdateStackRequest], any[AsyncHandler[UpdateStackRequest, UpdateStackResult]])
       there was no(mockAsyncClient).createStackAsync(any[CreateStackRequest], any[AsyncHandler[CreateStackRequest, CreateStackResult]])
 
-      requestCaptor.value must beLike { case req ⇒
+      requestCaptor.value must beLike { case req =>
           req.getChangeSetName must_== "change-set-name"
           req.getChangeSetType must_== "UPDATE"
       }
@@ -79,7 +104,7 @@ class CloudFormationClientSpec(implicit ee: ExecutionEnv) extends Specification 
       there was no(mockAsyncClient).createStackAsync(any[CreateStackRequest], any[AsyncHandler[CreateStackRequest, CreateStackResult]])
       there was no(mockAsyncClient).updateStackAsync(any[UpdateStackRequest], any[AsyncHandler[UpdateStackRequest, UpdateStackResult]])
 
-      requestCaptor.value must beLike { case req ⇒
+      requestCaptor.value must beLike { case req =>
         req.getChangeSetName must_== "change-set-name"
         req.getChangeSetType must_== "CREATE"
       }

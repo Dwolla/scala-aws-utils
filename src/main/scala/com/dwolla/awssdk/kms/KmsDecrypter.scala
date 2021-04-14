@@ -12,7 +12,7 @@ import com.dwolla.awssdk.utils.ScalaAsyncHandler.Implicits._
 import scala.concurrent.{ExecutionContext, Future}
 
 class KmsDecrypter(region: Regions = US_WEST_2) extends AutoCloseable {
-  protected lazy val asyncClient: AWSKMSAsync = AWSKMSAsyncClientBuilder.standard().withRegion(US_WEST_2).build()
+  protected lazy val asyncClient: AWSKMSAsync = AWSKMSAsyncClientBuilder.standard().withRegion(region).build()
 
   def decrypt[A](transformer: Transform[A], cryptotext: A)(implicit ec: ExecutionContext): Future[Array[Byte]] = new DecryptRequest()
     .withCiphertextBlob(ByteBuffer.wrap(transformer(cryptotext)))
@@ -21,7 +21,7 @@ class KmsDecrypter(region: Regions = US_WEST_2) extends AutoCloseable {
 
   def decrypt[A](transform: Transform[A], cryptotexts: (String, A)*)(implicit ec: ExecutionContext): Future[Map[String, Array[Byte]]] = {
     Future.sequence(cryptotexts.map {
-      case (name, cryptotext) ⇒ decrypt(transform, cryptotext).map(name → _)
+      case (name, cryptotext) => decrypt(transform, cryptotext).map(name -> _)
     }).map(Map(_: _*))
   }
 
@@ -31,8 +31,12 @@ class KmsDecrypter(region: Regions = US_WEST_2) extends AutoCloseable {
 }
 
 object KmsDecrypter {
-  type Transform[A] = A ⇒ Array[Byte]
+  type Transform[A] = A => Array[Byte]
 
-  val noopTransform: Transform[Array[Byte]] = (x: Array[Byte]) ⇒ x
-  val base64DecodingTransform: Transform[String] = javax.xml.bind.DatatypeConverter.parseBase64Binary
+  import java.util.Base64
+
+  private val base64Decoder = Base64.getDecoder
+
+  val noopTransform: Transform[Array[Byte]] = (x: Array[Byte]) => x
+  val base64DecodingTransform: Transform[String] = base64Decoder.decode
 }

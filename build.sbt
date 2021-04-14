@@ -1,56 +1,71 @@
-lazy val primaryName = "scala-aws-utils"
-
-lazy val commonSettings = Seq(
+inThisBuild(List(
   organization := "com.dwolla",
   homepage := Some(url("https://github.com/Dwolla/scala-aws-utils")),
   licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
-  releaseVersionBump := sbtrelease.Version.Bump.Minor,
-  releaseCrossBuild := true,
-  scalaVersion := "2.12.4",
-  crossScalaVersions := Seq("2.10.7", "2.11.12", "2.12.4"),
+  developers := List(
+    Developer(
+      "bpholt",
+      "Brian Holt",
+      "bholt+github@dwolla.com",
+      url("https://dwolla.com")
+    ),
+  ),
+  crossScalaVersions := Seq("2.13.5", "2.12.13"),
+  scalaVersion := crossScalaVersions.value.head,
   startYear := Option(2016),
+  addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.11.3" cross CrossVersion.full),
+  addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
   libraryDependencies ++= {
-    val awsSdkVersion = "1.11.271"
-    val specs2Version = "3.8.9"
+    val awsSdkVersion = "1.11.331"
+    val specs2Version = "4.10.6"
 
     Seq(
-      "com.amazonaws"   %  "aws-java-sdk-core"            % awsSdkVersion,
-      "com.amazonaws"   %  "aws-java-sdk-cloudformation"  % awsSdkVersion % Provided,
-      "com.amazonaws"   %  "aws-java-sdk-kms"             % awsSdkVersion % Provided,
-      "ch.qos.logback"  %  "logback-classic"              % "1.2.3",
-      "org.specs2"      %% "specs2-core"                  % specs2Version % Test,
-      "org.specs2"      %% "specs2-mock"                  % specs2Version % Test,
-      "com.amazonaws"   %  "aws-java-sdk-ecs"             % awsSdkVersion % Test
+      "com.amazonaws"           %  "aws-java-sdk-core"            % awsSdkVersion,
+      "com.amazonaws"           %  "aws-java-sdk-cloudformation"  % awsSdkVersion % Provided,
+      "com.amazonaws"           %  "aws-java-sdk-kms"             % awsSdkVersion % Provided,
+      "ch.qos.logback"          %  "logback-classic"              % "1.2.3",
+      "org.scala-lang.modules"  %% "scala-collection-compat"      % "2.4.3",
+      "org.specs2"              %% "specs2-core"                  % specs2Version % Test,
+      "org.specs2"              %% "specs2-mock"                  % specs2Version % Test,
+      "com.amazonaws"           %  "aws-java-sdk-ecs"             % awsSdkVersion % Test
     )
   },
-  scalacOptions += "-deprecation"
-)
 
-lazy val bintraySettings = Seq(
-  bintrayPackage := primaryName,
-  bintrayVcsUrl := homepage.value.map(_.toString),
-  bintrayRepository := "maven",
-  bintrayOrganization := Option("dwolla"),
-  pomIncludeRepository := { _ ⇒ false }
-)
+  githubWorkflowJavaVersions := Seq("adopt@1.8", "adopt@1.11"),
+  githubWorkflowTargetTags ++= Seq("v*"),
+  githubWorkflowPublishTargetBranches :=
+    Seq(RefPredicate.StartsWith(Ref.Tag("v"))),
+  githubWorkflowPublish := Seq(
+    WorkflowStep.Sbt(
+      List("ci-release"),
+      env = Map(
+        "PGP_PASSPHRASE" -> "${{ secrets.PGP_PASSPHRASE }}",
+        "PGP_SECRET" -> "${{ secrets.PGP_SECRET }}",
+        "SONATYPE_PASSWORD" -> "${{ secrets.SONATYPE_PASSWORD }}",
+        "SONATYPE_USERNAME" -> "${{ secrets.SONATYPE_USERNAME }}"
+      )
+    )
+  ),
+))
+
+lazy val primaryName = "scala-aws-utils"
 
 lazy val scalaAwsUtils = (project in file("."))
-  .settings({
-    Seq(
-      name := primaryName,
-      description := "Utilities for interacting with the AWS SDKs from Scala"
-    )
-  } ++ commonSettings ++ bintraySettings: _*)
+  .settings(
+    name := primaryName,
+    description := "Utilities for interacting with the AWS SDKs from Scala",
+    scalacOptions += "-language:reflectiveCalls",
+  )
   .dependsOn(testkit % Test)
   .aggregate(testkit)
 
 lazy val testkit = (project in file("testkit"))
-  .settings(Seq(
+  .settings(
     name := primaryName + "-testkit",
     description := "Test utilities for interacting with the AWS SDKs from Scala",
     libraryDependencies ++= {
       Seq(
-        "org.mockito"   %  "mockito-core"                % "1.9.5"
+        "org.mockito" % "mockito-core" % "3.9.0"
       )
-    }
-  ) ++ commonSettings ++ bintraySettings: _*)
+    },
+  )
