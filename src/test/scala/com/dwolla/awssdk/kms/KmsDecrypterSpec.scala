@@ -411,4 +411,94 @@ class FakeAWSKMSAsync extends AWSKMSAsync {
   override def tagResource(tagResourceRequest: TagResourceRequest): TagResourceResult = ???
 
   override def listResourceTags(listResourceTagsRequest: ListResourceTagsRequest): ListResourceTagsResult = ???
+
+  override def connectCustomKeyStoreAsync(connectCustomKeyStoreRequest: ConnectCustomKeyStoreRequest): JFuture[ConnectCustomKeyStoreResult] = ???
+
+  override def connectCustomKeyStoreAsync(connectCustomKeyStoreRequest: ConnectCustomKeyStoreRequest, asyncHandler: AsyncHandler[ConnectCustomKeyStoreRequest, ConnectCustomKeyStoreResult]): JFuture[ConnectCustomKeyStoreResult] = ???
+
+  override def createCustomKeyStoreAsync(createCustomKeyStoreRequest: CreateCustomKeyStoreRequest): JFuture[CreateCustomKeyStoreResult] = ???
+
+  override def createCustomKeyStoreAsync(createCustomKeyStoreRequest: CreateCustomKeyStoreRequest, asyncHandler: AsyncHandler[CreateCustomKeyStoreRequest, CreateCustomKeyStoreResult]): JFuture[CreateCustomKeyStoreResult] = ???
+
+  override def deleteCustomKeyStoreAsync(deleteCustomKeyStoreRequest: DeleteCustomKeyStoreRequest): JFuture[DeleteCustomKeyStoreResult] = ???
+
+  override def deleteCustomKeyStoreAsync(deleteCustomKeyStoreRequest: DeleteCustomKeyStoreRequest, asyncHandler: AsyncHandler[DeleteCustomKeyStoreRequest, DeleteCustomKeyStoreResult]): JFuture[DeleteCustomKeyStoreResult] = ???
+
+  override def describeCustomKeyStoresAsync(describeCustomKeyStoresRequest: DescribeCustomKeyStoresRequest): JFuture[DescribeCustomKeyStoresResult] = ???
+
+  override def describeCustomKeyStoresAsync(describeCustomKeyStoresRequest: DescribeCustomKeyStoresRequest, asyncHandler: AsyncHandler[DescribeCustomKeyStoresRequest, DescribeCustomKeyStoresResult]): JFuture[DescribeCustomKeyStoresResult] = ???
+
+  override def disconnectCustomKeyStoreAsync(disconnectCustomKeyStoreRequest: DisconnectCustomKeyStoreRequest): JFuture[DisconnectCustomKeyStoreResult] = ???
+
+  override def disconnectCustomKeyStoreAsync(disconnectCustomKeyStoreRequest: DisconnectCustomKeyStoreRequest, asyncHandler: AsyncHandler[DisconnectCustomKeyStoreRequest, DisconnectCustomKeyStoreResult]): JFuture[DisconnectCustomKeyStoreResult] = ???
+
+  override def generateDataKeyPairAsync(generateDataKeyPairRequest: GenerateDataKeyPairRequest): JFuture[GenerateDataKeyPairResult] = ???
+
+  override def generateDataKeyPairAsync(generateDataKeyPairRequest: GenerateDataKeyPairRequest, asyncHandler: AsyncHandler[GenerateDataKeyPairRequest, GenerateDataKeyPairResult]): JFuture[GenerateDataKeyPairResult] = ???
+
+  override def generateDataKeyPairWithoutPlaintextAsync(generateDataKeyPairWithoutPlaintextRequest: GenerateDataKeyPairWithoutPlaintextRequest): JFuture[GenerateDataKeyPairWithoutPlaintextResult] = ???
+
+  override def generateDataKeyPairWithoutPlaintextAsync(generateDataKeyPairWithoutPlaintextRequest: GenerateDataKeyPairWithoutPlaintextRequest, asyncHandler: AsyncHandler[GenerateDataKeyPairWithoutPlaintextRequest, GenerateDataKeyPairWithoutPlaintextResult]): JFuture[GenerateDataKeyPairWithoutPlaintextResult] = ???
+
+  override def generateMacAsync(generateMacRequest: GenerateMacRequest): JFuture[GenerateMacResult] = ???
+
+  override def generateMacAsync(generateMacRequest: GenerateMacRequest, asyncHandler: AsyncHandler[GenerateMacRequest, GenerateMacResult]): JFuture[GenerateMacResult] = ???
+
+  override def getPublicKeyAsync(getPublicKeyRequest: GetPublicKeyRequest): JFuture[GetPublicKeyResult] = ???
+
+  override def getPublicKeyAsync(getPublicKeyRequest: GetPublicKeyRequest, asyncHandler: AsyncHandler[GetPublicKeyRequest, GetPublicKeyResult]): JFuture[GetPublicKeyResult] = ???
+
+  override def replicateKeyAsync(replicateKeyRequest: ReplicateKeyRequest): JFuture[ReplicateKeyResult] = ???
+
+  override def replicateKeyAsync(replicateKeyRequest: ReplicateKeyRequest, asyncHandler: AsyncHandler[ReplicateKeyRequest, ReplicateKeyResult]): JFuture[ReplicateKeyResult] = ???
+
+  override def signAsync(signRequest: SignRequest): JFuture[SignResult] = ???
+
+  override def signAsync(signRequest: SignRequest, asyncHandler: AsyncHandler[SignRequest, SignResult]): JFuture[SignResult] = ???
+
+  override def updateCustomKeyStoreAsync(updateCustomKeyStoreRequest: UpdateCustomKeyStoreRequest): JFuture[UpdateCustomKeyStoreResult] = ???
+
+  override def updateCustomKeyStoreAsync(updateCustomKeyStoreRequest: UpdateCustomKeyStoreRequest, asyncHandler: AsyncHandler[UpdateCustomKeyStoreRequest, UpdateCustomKeyStoreResult]): JFuture[UpdateCustomKeyStoreResult] = ???
+
+  override def updatePrimaryRegionAsync(updatePrimaryRegionRequest: UpdatePrimaryRegionRequest): JFuture[UpdatePrimaryRegionResult] = ???
+
+  override def updatePrimaryRegionAsync(updatePrimaryRegionRequest: UpdatePrimaryRegionRequest, asyncHandler: AsyncHandler[UpdatePrimaryRegionRequest, UpdatePrimaryRegionResult]): JFuture[UpdatePrimaryRegionResult] = ???
+
+  override def verifyAsync(verifyRequest: VerifyRequest): JFuture[VerifyResult] = ???
+
+  override def verifyAsync(verifyRequest: VerifyRequest, asyncHandler: AsyncHandler[VerifyRequest, VerifyResult]): JFuture[VerifyResult] = ???
+
+  override def verifyMacAsync(verifyMacRequest: VerifyMacRequest): JFuture[VerifyMacResult] = ???
+
+  override def verifyMacAsync(verifyMacRequest: VerifyMacRequest, asyncHandler: AsyncHandler[VerifyMacRequest, VerifyMacResult]): JFuture[VerifyMacResult] = ???
+
+  override def connectCustomKeyStore(connectCustomKeyStoreRequest: ConnectCustomKeyStoreRequest): ConnectCustomKeyStoreResult = ???
+
+  override def createCustomKeyStore(createCustomKeyStoreRequest: CreateCustomKeyStoreRequest): CreateCustomKeyStoreResult = ???
+
+  override def deleteCustomKeyStore(deleteCustomKeyStoreRequest: DeleteCustomKeyStoreRequest): DeleteCustomKeyStoreResult = ???
+
+  override def describeCustomKeyStores(describeCustomKeyStoresRequest: DescribeCustomKeyStoresRequest): DescribeCustomKeyStoresResult = ???
+
+  override def disconnectCustomKeyStore(disconnectCustomKeyStoreRequest: DisconnectCustomKeyStoreRequest): DisconnectCustomKeyStoreResult = ???
+
+  override def generateDataKeyPair(generateDataKeyPairRequest: GenerateDataKeyPairRequest): GenerateDataKeyPairResult = ???
+
+  override def generateDataKeyPairWithoutPlaintext(generateDataKeyPairWithoutPlaintextRequest: GenerateDataKeyPairWithoutPlaintextRequest): GenerateDataKeyPairWithoutPlaintextResult = ???
+
+  override def generateMac(generateMacRequest: GenerateMacRequest): GenerateMacResult = ???
+
+  override def getPublicKey(getPublicKeyRequest: GetPublicKeyRequest): GetPublicKeyResult = ???
+
+  override def replicateKey(replicateKeyRequest: ReplicateKeyRequest): ReplicateKeyResult = ???
+
+  override def sign(signRequest: SignRequest): SignResult = ???
+
+  override def updateCustomKeyStore(updateCustomKeyStoreRequest: UpdateCustomKeyStoreRequest): UpdateCustomKeyStoreResult = ???
+
+  override def updatePrimaryRegion(updatePrimaryRegionRequest: UpdatePrimaryRegionRequest): UpdatePrimaryRegionResult = ???
+
+  override def verify(verifyRequest: VerifyRequest): VerifyResult = ???
+
+  override def verifyMac(verifyMacRequest: VerifyMacRequest): VerifyMacResult = ???
 }
