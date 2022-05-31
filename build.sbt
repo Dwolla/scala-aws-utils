@@ -16,7 +16,7 @@ inThisBuild(List(
   addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.11.3" cross CrossVersion.full),
   addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
   libraryDependencies ++= {
-    val awsSdkVersion = "1.11.331"
+    val awsSdkVersion = "1.12.217"
     val specs2Version = "4.10.6"
 
     Seq(
